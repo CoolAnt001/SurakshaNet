@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SurakshaNet — Privacy-Preserving Community Health Intelligence</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            },
+            status: {
+              normal: '#22c55e',
+              watch: '#f59e0b',
+              verify: '#6366f1',
+              elevated: '#ef4444',
+              suppressed: '#6b7280',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+    h1, h2, h3, .font-display {
+      font-family: 'Outfit', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+
+  <!-- React & DOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel CDN -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="text-slate-900">
+
+  <div id="root"></div>
+
+  <!-- React Code with Babel -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- CLIENT-SIDE DATABASE & ANALYTICS ENGINE SIMULATION ---
+
+    const INITIAL_AREAS = [
+      { id: "cda_sector_1", name: "CDA Sector 1", population: 1500 },
+      { id: "cda_sector_5", name: "CDA Sector 5", population: 2000 },
+      { id: "cda_sector_9", name: "CDA Sector 9", population: 1800 },
+      { id: "cuttack_rural", name: "Cuttack Rural", population: 3000 },
+      { id: "barang", name: "Barang", population: 1200 },
+      { id: "small_village", name: "Small Village", population: 6 } // suppression test
+    ];
+
+    const SIGNALS_META = {
+      fever: { name: "Fever Cases", category: "clinic", weight: 0.15, mean: 12.0, std: 2.5, small_mean: 1.2, small_std: 0.4 },
+      respiratory: { name: "Respiratory Symptoms", category: "clinic", weight: 0.15, mean: 15.0, std: 3.0, small_mean: 1.5, small_std: 0.5 },
+      gastrointestinal: { name: "Gastrointestinal Symptoms", category: "clinic", weight: 0.10, mean: 8.0, std: 1.8, small_mean: 0.8, small_std: 0.3 },
+      water_turbidity: { name: "Water Turbidity", category: "water", weight: 0.10, mean: 2.1, std: 0.4, small_mean: 2.1, small_std: 0.4 },
+      water_ph: { name: "Water pH", category: "water", weight: 0.10, mean: 7.2, std: 0.2, small_mean: 7.2, small_std: 0.2 },
+      water_contamination: { name: "Contamination Index", category: "water", weight: 0.10, mean: 10.0, std: 2.0, small_mean: 10.0, small_std: 2.0 },
+      ors_demand: { name: "ORS Demand", category: "pharmacy", weight: 0.10, mean: 5.0, std: 1.0, small_mean: 0.5, small_std: 0.15 },
+      fever_meds: { name: "Fever Medication Demand", category: "pharmacy", weight: 0.10, mean: 14.0, std: 2.8, small_mean: 1.4, small_std: 0.4 },
+      rainfall: { name: "Rainfall", category: "environment", weight: 0.05, mean: 15.0, std: 4.0, small_mean: 15.0, small_std: 4.0 },
+      stagnant_water: { name: "Stagnant Water Index", category: "environment", weight: 0.05, mean: 12.0, std: 2.2, small_mean: 12.0, small_std: 2.2 }
+    };
+
+    // Client-side noise generator
+    function generateLaplaceNoise(sensitivity, epsilon) {
+      const scale = sensitivity / epsilon;
+      const u = Math.random() - 0.5;
+      return -scale * Math.sign(u) * Math.log(1.0 - 2.0 * Math.abs(u));
+    }
+
+    // Client-side analytics engine
+    function calculateZScore(observed, mean, std, signalId) {
+      if (std <= 0) return 0.0;
+      const z = (observed - mean) / std;
+      return signalId === "water_ph" ? Math.abs(z) : Math.max(0.0, z);
+    }
+
+    function runClientSideAnalysis(areaId, scenarioName, localOverrides = {}, dpEpsilon = 1.0, dpSensitivity = 1.0, minGroupSize = 10) {
+      const area = INITIAL_AREAS.find(a => a.id === areaId);
+      if (!area) return { error: "Area not found" };
+
+      // Suppress check
+      if (area.population < minGroupSize) {
+        return {
+          area_id: area.id,
+          area_name: area.name,
+          population: area.population,
+          status: "SUPPRESSED",
+          risk_score: 0.0,
+          confidence: "NONE",
+          reason: "Insufficient group size for privacy-preserving reporting.",
+          signals: [],
+          contributions: {},
+          active_scenario: scenarioName,
+          audit_trail: {
+            raw_records: "SUPPRESSED",
+            identifiers_removed: "YES",
+            min_group_threshold: minGroupSize,
+            differential_privacy: "ENABLED",
+            transmitted: "NO"
+          }
+        };
+      }
+
+      const signalsReport = [];
+      const categoryAnomalies = { clinic: [], water: [], pharmacy: [], environment: [] };
+      let totalWeightedAnomaly = 0.0;
+      let totalWeight = 0.0;
+
+      // Seed current values based on scenario rules
+      for (const [sigId, meta] of Object.entries(SIGNALS_META)) {
+        const mean = areaId === "small_village" ? meta.small_mean : meta.mean;
+        const std = areaId === "small_village" ? meta.small_std : meta.std;
+        const weight = meta.weight;
+
+        // Base observed is baseline mean with tiny normal noise
+        let observed = mean + (Math.random() - 0.5) * std * 0.2;
+        observed = Math.max(0.1, observed);
+
+        // Apply Scenario variations
+        if (scenarioName === "Single Source Spike") {
+          if (areaId === "cda_sector_9" && (sigId === "fever" || sigId === "gastrointestinal")) {
+            observed = mean * 3.5;
+          }
+        } else if (scenarioName === "Gastrointestinal Cluster") {
+          if (areaId === "cda_sector_9") {
+            if (sigId === "gastrointestinal") observed = mean * 3.4;
+            else if (sigId === "water_contamination") observed = mean * 2.9;
+            else if (sigId === "ors_demand") observed = mean * 2.5;
+            else if (sigId === "rainfall") observed = mean * 1.8;
+            else if (sigId === "fever") observed = mean * 1.5;
+            else if (sigId === "stagnant_water") observed = mean * 1.6;
+          }
+        } else if (scenarioName === "Rural Under-Reporting") {
+          if (areaId === "cuttack_rural") {
+            if (sigId === "water_contamination" || sigId === "water_turbidity") observed = mean * 2.9;
+            else if (sigId === "rainfall") observed = observed = mean * 1.9;
+            else if (sigId === "fever" || sigId === "gastrointestinal" || sigId === "respiratory") {
+              observed = mean * 0.2; // abnormally low
+            }
+          }
+        } else if (scenarioName === "Small Group") {
+          if (areaId === "small_village" && sigId === "gastrointestinal") {
+            observed = mean * 5.0; // small group spike (suppressed)
+          }
+        }
+
+        // Apply Local overrides (if any)
+        if (localOverrides[sigId] !== undefined) {
+          observed = localOverrides[sigId];
+        }
+
+        const zScore = calculateZScore(observed, mean, std, sigId);
+        const pctDeviation = ((observed - mean) / mean) * 100;
+        const indivAnomalyScore = Math.min(100.0, zScore * 33.3);
+
+        signalsReport.push({
+          id: sigId,
+          name: meta.name,
+          category: meta.category,
+          observed: parseFloat(observed.toFixed(2)),
+          baseline_mean: parseFloat(mean.toFixed(2)),
+          baseline_std: parseFloat(std.toFixed(2)),
+          z_score: parseFloat(zScore.toFixed(2)),
+          pct_deviation: parseFloat(pctDeviation.toFixed(1)),
+          anomaly_score: parseFloat(indivAnomalyScore.toFixed(1)),
+          weight: weight
+        });
+
+        categoryAnomalies[meta.category].push(zScore);
+        totalWeightedAnomaly += indivAnomalyScore * weight;
+        totalWeight += weight;
+      }
+
+      // Fusion Risk score
+      const riskScore = parseFloat((totalWeightedAnomaly / totalWeight).toFixed(1));
+
+      // Calculate multivariate ML anomaly score using distance metric
+      let distanceSum = 0;
+      signalsReport.forEach(s => {
+        distanceSum += Math.pow(s.z_score, 2) * s.weight;
+      });
+      const mlAnomalyScore = Math.min(100.0, parseFloat((Math.sqrt(distanceSum) * 45).toFixed(1)));
+
+      // Determine alert status
+      let status = "NORMAL";
+      let reason = "All signals within expected historical ranges.";
+      let confidence = "LOW";
+
+      const anomalousCategories = [];
+      for (const [cat, zList] of Object.entries(categoryAnomalies)) {
+        if (zList.length && Math.max(...zList) >= 2.0) {
+          anomalousCategories.push(cat);
+        }
+      }
+
+      const clinicalZ = categoryAnomalies.clinic.length ? Math.max(...categoryAnomalies.clinic) : 0;
+      const envWaterZ = Math.max(...(categoryAnomalies.environment.concat(categoryAnomalies.water)));
+
+      if (envWaterZ >= 2.0 && clinicalZ < 0.5) {
+        status = "WATCH";
+        confidence = "MEDIUM";
+        reason = "Environmental/water evidence increased while clinical reporting remains below expected levels. Possible reporting delay or under-observation (Rural Under-Reporting).";
+      } else {
+        if (anomalousCategories.length >= 2) {
+          status = "ELEVATED";
+          confidence = "HIGH";
+          reason = `Multiple independent signals (${anomalousCategories.join(", ")}) exceed historical baselines.`;
+        } else if (anomalousCategories.length === 1) {
+          status = "VERIFY";
+          confidence = "LOW";
+          reason = `Signal mismatch: only ${anomalousCategories[0]} shows a significant deviation. Potential isolated reporting anomaly.`;
+        } else if (riskScore > 25.0) {
+          status = "WATCH";
+          confidence = "LOW";
+          reason = "Minor deviations across signals. Keep monitoring.";
+        }
+      }
+
+      // Explainable AI (XAI)
+      const contributions = {};
+      if (totalWeightedAnomaly > 0) {
+        signalsReport.forEach(sig => {
+          const contrib = (sig.anomaly_score * sig.weight) / totalWeightedAnomaly * 100;
+          contributions[sig.id] = parseFloat(contrib.toFixed(1));
+        });
+      } else {
+        signalsReport.forEach(sig => {
+          contributions[sig.id] = parseFloat((sig.weight * 100).toFixed(1));
+        });
+      }
+
+      return {
+        area_id: areaId,
+        area_name: area.name,
+        population: area.population,
+        status: status,
+        risk_score: riskScore,
+        ml_anomaly_score: mlAnomalyScore,
+        confidence: confidence,
+        reason: reason,
+        signals: signalsReport,
+        contributions: contributions,
+        active_scenario: scenarioName,
+        audit_trail: {
+          raw_records: "NEVER TRANSMITTED ✓",
+          identifiers_removed: "YES ✓",
+          min_group_threshold: minGroupSize,
+          differential_privacy: "ENABLED ✓",
+          transmitted: "YES ✓"
+        }
+      };
+    }
+
+    // --- MAIN APP REACT COMPONENT ---
+
+    function App() {
+      const [currentView, setCurrentView] = useState('landing');
+      const [selectedArea, setSelectedArea] = useState('cda_sector_9');
+      const [activeScenario, setActiveScenario] = useState('Normal');
+      const [areaDetails, setAreaDetails] = useState(null);
+      const [areasList, setAreasList] = useState([]);
+      const [privacyAudits, setPrivacyAudits] = useState([]);
+      const [localOverrides, setLocalOverrides] = useState({});
+
+      // Node simulator states
+      const [localNodeEpsilon, setLocalNodeEpsilon] = useState(1.0);
+      const [localNodeSensitivity, setLocalNodeSensitivity] = useState(1.0);
+      const [localMinGroupSize, setLocalMinGroupSize] = useState(10);
+      const [localRecords, setLocalRecords] = useState([
+        { patient_id: "P101", age: 24, hostel: "Hostel A", symptom: "Fever" },
+        { patient_id: "P102", age: 19, hostel: "Hostel B", symptom: "Diarrhea" },
+        { patient_id: "P103", age: 31, hostel: "Hostel A", symptom: "Diarrhea" },
+        { patient_id: "P104", age: 22, hostel: "Hostel C", symptom: "Cough" },
+        { patient_id: "P105", age: 25, hostel: "Hostel B", symptom: "Diarrhea" },
+        { patient_id: "P106", age: 29, hostel: "Hostel A", symptom: "Diarrhea" },
+        { patient_id: "P107", age: 21, hostel: "Hostel D", symptom: "Diarrhea" },
+        { patient_id: "P108", age: 20, hostel: "Hostel C", symptom: "Fever" },
+        { patient_id: "P109", age: 23, hostel: "Hostel B", symptom: "Diarrhea" },
+        { patient_id: "P110", age: 18, hostel: "Hostel A", symptom: "Diarrhea" },
+        { patient_id: "P111", age: 27, hostel: "Hostel C", symptom: "Diarrhea" },
+      ]);
+      const [newPatient, setNewPatient] = useState({ patient_id: "P112", age: 20, hostel: "Hostel A", symptom: "Diarrhea" });
+      const [localAggregationResult, setLocalAggregationResult] = useState(null);
+
+      // DP Sandbox states
+      const [dpInputValue, setDpInputValue] = useState(50.0);
+      const [dpEpsilon, setDpEpsilon] = useState(1.0);
+      const [dpSensitivity, setDpSensitivity] = useState(1.0);
+      const [dpResult, setDpResult] = useState(null);
+
+      const availableScenarios = [
+        "Normal", 
+        "Single Source Spike", 
+        "Gastrointestinal Cluster", 
+        "Rural Under-Reporting", 
+        "Small Group"
+      ];
+
+      // Load data
+      useEffect(() => {
+        const list = INITIAL_AREAS.map(a => {
+          const analysis = runClientSideAnalysis(a.id, activeScenario, localOverrides, localNodeEpsilon, localNodeSensitivity, localMinGroupSize);
+          return {
+            id: a.id,
+            name: a.name,
+            status: analysis.status,
+            risk_score: analysis.risk_score,
+            confidence: analysis.confidence
+          };
+        });
+        setAreasList(list);
+
+        const details = runClientSideAnalysis(selectedArea, activeScenario, localOverrides, localNodeEpsilon, localNodeSensitivity, localMinGroupSize);
+        setAreaDetails(details);
+      }, [selectedArea, activeScenario, localOverrides, localMinGroupSize]);
+
+      // Render Charts
+      useEffect(() => {
+        if (areaDetails && currentView === 'officer' && areaDetails.status !== "SUPPRESSED") {
+          renderCharts();
+        }
+        return () => {
+          destroyCharts();
+        };
+      }, [areaDetails, currentView]);
+
+      const destroyCharts = () => {
+        const trendCanvas = document.getElementById('trendChart');
+        if (trendCanvas) {
+          const chart = Chart.getChart(trendCanvas);
+          if (chart) chart.destroy();
+        }
+        const xaiCanvas = document.getElementById('xaiChart');
+        if (xaiCanvas) {
+          const chart = Chart.getChart(xaiCanvas);
+          if (chart) chart.destroy();
+        }
+      };
+
+      const renderCharts = () => {
+        destroyCharts();
+
+        // 1. Trend Chart
+        const trendCtx = document.getElementById('trendChart');
+        if (trendCtx) {
+          new Chart(trendCtx, {
+            type: 'bar',
+            data: {
+              labels: areaDetails.signals.map(s => s.name),
+              datasets: [
+                {
+                  label: 'Observed Value',
+                  data: areaDetails.signals.map(s => s.observed),
+                  backgroundColor: 'rgba(2, 132, 199, 0.85)',
+                  borderColor: 'rgb(2, 132, 199)',
+                  borderWidth: 1,
+                  borderRadius: 4
+                },
+                {
+                  label: 'Historical Mean',
+                  data: areaDetails.signals.map(s => s.baseline_mean),
+                  backgroundColor: 'rgba(203, 213, 225, 0.6)',
+                  borderColor: 'rgb(148, 163, 184)',
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  borderDash: [4, 4]
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+              },
+              plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }
+            }
+          });
+        }
+
+        // 2. XAI Chart
+        const xaiCtx = document.getElementById('xaiChart');
+        if (xaiCtx) {
+          const sorted = Object.entries(areaDetails.contributions).sort((a, b) => b[1] - a[1]);
+          new Chart(xaiCtx, {
+            type: 'doughnut',
+            data: {
+              labels: sorted.map(([id]) => {
+                const sig = areaDetails.signals.find(s => s.id === id);
+                return sig ? sig.name : id;
+              }),
+              datasets: [{
+                data: sorted.map(([, val]) => val),
+                backgroundColor: [
+                  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1',
+                  '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#a855f7'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+      };
+
+      // Aggregate Local simulator
+      const handleLocalAggregate = () => {
+        // Count raw records
+        const counts = {};
+        localRecords.forEach(r => {
+          counts[r.symptom.toLowerCase()] = (counts[r.symptom.toLowerCase()] || 0) + 1;
+        });
+
+        const newOverrides = {};
+        const localAudits = [];
+
+        for (const [sym, count] of Object.entries(counts)) {
+          const sigMap = { diarrhea: "gastrointestinal", fever: "fever", cough: "respiratory" };
+          const sigId = sigMap[sym] || sym;
+
+          let status = "TRANSMITTED";
+          let noise = 0;
+          let protectedVal = null;
+
+          if (count < localMinGroupSize) {
+            status = "SUPPRESSED";
+            newOverrides[sigId] = 0; // suppressed count
+          } else {
+            noise = generateLaplaceNoise(localNodeSensitivity, localNodeEpsilon);
+            protectedVal = parseFloat((count + noise).toFixed(2));
+            newOverrides[sigId] = protectedVal;
+          }
+
+          localAudits.push({
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toLocaleTimeString(),
+            signal_id: sigId,
+            raw_count: count,
+            noise_added: parseFloat(noise.toFixed(2)),
+            noised_count: protectedVal,
+            epsilon: localNodeEpsilon,
+            sensitivity: localNodeSensitivity,
+            status: status
+          });
+        }
+
+        setLocalOverrides(newOverrides);
+        setPrivacyAudits(localAudits.concat(privacyAudits).slice(0, 20));
+        setLocalAggregationResult({
+          status: "success",
+          area_id: selectedArea,
+          protected_payload: newOverrides,
+          message: "Aggregated and protected at the local node. Raw patient data scrubbed."
+        });
+      };
+
+      const handleDpSandbox = () => {
+        const noise = generateLaplaceNoise(dpSensitivity, dpEpsilon);
+        setDpResult({
+          original_value: dpInputValue,
+          noise_added: parseFloat(noise.toFixed(4)),
+          protected_value: parseFloat((dpInputValue + noise).toFixed(4)),
+          epsilon: dpEpsilon,
+          sensitivity: dpSensitivity
+        });
+      };
+
+      const getStatusClass = (status) => {
+        switch (status) {
+          case 'NORMAL': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+          case 'WATCH': return 'bg-amber-50 text-amber-700 border-amber-200';
+          case 'VERIFY': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+          case 'ELEVATED': return 'bg-rose-50 text-rose-700 border-rose-200';
+          case 'SUPPRESSED': return 'bg-slate-100 text-slate-600 border-slate-200';
+          default: return 'bg-slate-50 text-slate-600 border-slate-200';
+        }
+      };
+
+      return (
+        <div class="min-h-screen flex flex-col font-sans">
+          
+          {/* Header */}
+          <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentView('landing')}>
+                  <div class="h-10 w-10 bg-sky-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-sky-600/30">
+                    <span class="font-bold text-xl tracking-tight">S</span>
+                  </div>
+                  <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-800">SurakshaNet</h1>
+                    <p class="text-xs text-slate-500 font-medium">Privacy-Preserving Health Analytics</p>
+                  </div>
+                </div>
+                
+                {/* Navigation links */}
+                <nav class="hidden md:flex space-x-6 text-sm font-semibold">
+                  <button 
+                    onClick={() => setCurrentView('landing')} 
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'landing' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    Overview
+                  </button>
+                  <button 
+                    onClick={() => setCurrentView('citizen')} 
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'citizen' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    Citizen View
+                  </button>
+                  <button 
+                    onClick={() => setCurrentView('officer')} 
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'officer' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    Officer Dashboard
+                  </button>
+                  <button 
+                    onClick={() => setCurrentView('privacy-node')} 
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'privacy-node' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    Local Privacy Node
+                  </button>
+                </nav>
+
+                {/* Scenario dropdown */}
+                <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                  <span class="text-xs font-bold text-slate-500 uppercase px-1">Scenario:</span>
+                  <select 
+                    value={activeScenario}
+                    onChange={(e) => { setActiveScenario(e.target.value); setLocalOverrides({}); }}
+                    class="bg-white border border-slate-200 rounded text-xs font-semibold py-1 px-2.5 text-slate-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-sky-500">
+                    {availableScenarios.map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main class="flex-grow">
+            
+            {/* VIEW 1: LANDING */}
+            {currentView === 'landing' && (
+              <div>
+                <section class="py-16 bg-gradient-to-b from-sky-50 via-sky-50/30 to-white border-b border-slate-100">
+                  <div class="max-w-4xl mx-auto text-center px-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800 mb-6">
+                      Smart India Hackathon Prototype (GitHub Pages Deployable)
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+                      Detect Community Health Alerts <br/>
+                      <span class="text-sky-600">Without Centralizing Personal Records</span>
+                    </h2>
+                    <p class="text-lg text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                      SurakshaNet runs client-side differential privacy calculations, baseline Z-scoring, and multi-signal triangulation algorithms natively in your browser.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                      <button 
+                        onClick={() => { setCurrentView('officer'); setSelectedArea('cda_sector_9'); }}
+                        class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-sky-600/20 transition-all">
+                        Launch Officer Dashboard
+                      </button>
+                      <button 
+                        onClick={() => setCurrentView('citizen')}
+                        class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors">
+                        Enter Citizen Portal
+                      </button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="py-16 max-w-5xl mx-auto px-4">
+                  <h3 class="text-2xl font-bold text-center text-slate-800 mb-12">How SurakshaNet Secures Data (Privacy Pipeline)</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                      <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-3">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-800 text-sm">Local Sources</h4>
+                      <p class="text-xs text-slate-500 mt-2">Clinic electronic medical records, pharmacies, and environmental monitors generate raw data.</p>
+                    </div>
+                    <div class="hidden md:flex items-center justify-center text-slate-400">
+                      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                    <div class="bg-sky-600 p-5 rounded-xl text-white shadow-md flex flex-col items-center text-center">
+                      <div class="h-10 w-10 bg-white/20 text-white rounded-lg flex items-center justify-center mb-3">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                      </div>
+                      <h4 class="font-bold text-sm">Privacy Layer</h4>
+                      <p class="text-xs text-sky-100 mt-2">Removes patient PII, scrubs names, applies Laplace noise, and suppresses count values below 10.</p>
+                    </div>
+                    <div class="hidden md:flex items-center justify-center text-slate-400">
+                      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                      <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-3">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-800 text-sm">Central Analytics</h4>
+                      <p class="text-xs text-slate-500 mt-2">Only receives protected aggregates. Evaluates anomaly scores, multi-signal weights, and triggers health alerts.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* VIEW 2: CITIZEN */}
+            {currentView === 'citizen' && (
+              <div class="max-w-4xl mx-auto py-12 px-4">
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-xl mx-auto">
+                  <h3 class="text-2xl font-bold text-slate-800 mb-2">Citizen Health Portal</h3>
+                  <p class="text-sm text-slate-500 mb-6 font-medium">Select your area to check current safety alerts.</p>
+
+                  <div class="mb-6">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Your Region</label>
+                    <select 
+                      value={selectedArea}
+                      onChange={(e) => setSelectedArea(e.target.value)}
+                      class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-700 focus:outline-none">
+                      {areasList.map(a => (
+                        <option key={a.id} value={a.id}>{a.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {areaDetails && (
+                    areaDetails.status === "SUPPRESSED" ? (
+                      <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center text-slate-500">
+                        <p class="font-semibold text-sm mb-1 text-slate-700">Details Suppressed</p>
+                        <p class="text-xs">No public health alerts or reports are available. This area has too few active reporters, maintaining small-group privacy.</p>
+                      </div>
+                    ) : (
+                      <div class="space-y-6">
+                        <div class="border rounded-xl p-6 text-center shadow-sm bg-slate-50/50">
+                          <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Current Health Status</p>
+                          <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-white shadow-sm border border-slate-100 mt-2">
+                            <span class={`h-2.5 w-2.5 rounded-full mr-2 ${
+                              areaDetails.status === 'NORMAL' ? 'bg-emerald-500' :
+                              areaDetails.status === 'WATCH' ? 'bg-amber-500' :
+                              areaDetails.status === 'VERIFY' ? 'bg-indigo-500' : 'bg-rose-500'
+                            }`}></span>
+                            <span class="font-bold text-slate-700">{areaDetails.status}</span>
+                          </span>
+
+                          <p class="text-sm font-semibold text-slate-750 mt-4 leading-relaxed px-4">
+                            {areaDetails.status === 'NORMAL' && "No significant unusual disease/symptom clusters are active in your sector. General precautions apply."}
+                            {areaDetails.status === 'WATCH' && "Minor health indicators are elevated. Remain vigilant and monitor warnings."}
+                            {areaDetails.status === 'VERIFY' && "An isolated reading is elevated. Local officials are verifying the source."}
+                            {areaDetails.status === 'ELEVATED' && "Multiple indicators show elevated health trends. Maintain strict hygiene guidelines."}
+                          </p>
+                        </div>
+
+                        <div class="bg-sky-50 border border-sky-100 rounded-xl p-6">
+                          <h4 class="font-bold text-sky-950 text-sm mb-3">Recommended General Precautions:</h4>
+                          <ul class="space-y-3 text-sm text-sky-900 font-medium">
+                            <li class="flex items-start">
+                              <span class="h-5 w-5 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
+                              <span>Always consume filtered or boiled drinking water.</span>
+                            </li>
+                            <li class="flex items-start">
+                              <span class="h-5 w-5 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
+                              <span>Maintain hand hygiene: wash hands before eating or preparing food.</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* VIEW 3: OFFICER */}
+            {currentView === 'officer' && (
+              <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-slate-400 uppercase">Monitored Areas</p>
+                      <h4 class="text-2xl font-bold text-slate-800 mt-1">{areasList.length}</h4>
+                    </div>
+                    <div class="h-10 w-10 bg-sky-50 text-sky-600 rounded-lg flex items-center justify-center">
+                      <i data-lucide="map" class="h-5 w-5"></i>
+                    </div>
+                  </div>
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-slate-400 uppercase">Elevated Alerts</p>
+                      <h4 class="text-2xl font-bold text-rose-600 mt-1">
+                        {areasList.filter(a => a.status === 'ELEVATED').length}
+                      </h4>
+                    </div>
+                    <div class="h-10 w-10 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center">
+                      <i data-lucide="alert-triangle" class="h-5 w-5"></i>
+                    </div>
+                  </div>
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-slate-400 uppercase">Verification Pending</p>
+                      <h4 class="text-2xl font-bold text-indigo-600 mt-1">
+                        {areasList.filter(a => a.status === 'VERIFY').length}
+                      </h4>
+                    </div>
+                    <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                      <i data-lucide="check-square" class="h-5 w-5"></i>
+                    </div>
+                  </div>
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-slate-400 uppercase">Privacy Noise Status</p>
+                      <h4 class="text-2xl font-bold text-emerald-600 mt-1">DP Active</h4>
+                    </div>
+                    <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
+                      <i data-lucide="shield" class="h-5 w-5"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <h3 class="text-lg font-bold text-slate-800 mb-4 font-display">Area Status Map</h3>
+                      <div class="grid grid-cols-2 gap-3">
+                        {areasList.map(a => (
+                          <div 
+                            key={a.id} 
+                            onClick={() => setSelectedArea(a.id)}
+                            class={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                              selectedArea === a.id ? 'border-sky-600 ring-2 ring-sky-50' : 'border-slate-100 hover:border-slate-300'
+                            } bg-slate-50 flex flex-col justify-between h-28`}>
+                            <span class="text-xs font-bold text-slate-700 leading-tight">{a.name}</span>
+                            <div class="mt-4 flex items-center justify-between">
+                              <span class="text-[10px] text-slate-400 font-bold uppercase">Risk Score</span>
+                              <span class="text-xs font-extrabold text-slate-800">{a.risk_score}</span>
+                            </div>
+                            <span class={`text-[10px] font-bold self-start mt-2 px-2 py-0.5 rounded-full border ${getStatusClass(a.status)}`}>
+                              {a.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="lg:col-span-2 space-y-6">
+                    {areaDetails ? (
+                      areaDetails.status === "SUPPRESSED" ? (
+                        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center">
+                          <h3 class="text-lg font-bold text-slate-800">Detailed Report Suppressed</h3>
+                          <p class="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
+                            The population group for <strong>{areaDetails.area_name}</strong> is {areaDetails.population} (below the minimum threshold of 10). Detailed analytics are suppressed to ensure differential privacy.
+                          </p>
+                        </div>
+                      ) : (
+                        <div class="space-y-6">
+                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="flex flex-wrap items-center justify-between mb-4 gap-3">
+                              <div>
+                                <h3 class="text-xl font-bold text-slate-800 font-display">{areaDetails.area_name}</h3>
+                                <p class="text-xs text-slate-400 font-semibold mt-0.5">Current Active Scenario: <strong class="text-slate-650">{areaDetails.active_scenario}</strong></p>
+                              </div>
+                              <span class={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusClass(areaDetails.status)}`}>
+                                {areaDetails.status}
+                              </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 py-4 my-4">
+                              <div class="text-center md:border-r border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Triangulated Risk</span>
+                                <span class="text-3xl font-extrabold text-slate-850 mt-1 block">{areaDetails.risk_score}<span class="text-sm text-slate-400 font-normal"> / 100</span></span>
+                              </div>
+                              <div class="text-center md:border-r border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ML Anomaly Score</span>
+                                <span class="text-3xl font-extrabold text-slate-850 mt-1 block">{areaDetails.ml_anomaly_score}<span class="text-sm text-slate-400 font-normal"> / 100</span></span>
+                              </div>
+                              <div class="text-center font-bold text-slate-800">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Evidence Agreement</span>
+                                <span class="text-3xl font-extrabold mt-1 block text-slate-800">{areaDetails.confidence}</span>
+                              </div>
+                            </div>
+
+                            <p class="text-xs font-medium text-slate-600 bg-slate-50 border border-slate-100 p-3 rounded-lg leading-relaxed">
+                              <strong>Evaluation Summary:</strong> {areaDetails.reason}
+                            </p>
+                          </div>
+
+                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Signal Deviation from Baseline</h4>
+                            <div class="h-64 relative">
+                              <canvas id="trendChart"></canvas>
+                            </div>
+                          </div>
+
+                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Ingested Data Source Breakdown</h4>
+                            <div class="overflow-x-auto">
+                              <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-100">
+                                    <th class="py-2.5 px-3">Signal Name</th>
+                                    <th class="py-2.5 px-3">Category</th>
+                                    <th class="py-2.5 px-3 text-right">Current Value</th>
+                                    <th class="py-2.5 px-3 text-right">Baseline Mean</th>
+                                    <th class="py-2.5 px-3 text-right">Z-Score</th>
+                                    <th class="py-2.5 px-3 text-right">Deviation</th>
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-600">
+                                  {areaDetails.signals.map(s => (
+                                    <tr key={s.id} class="hover:bg-slate-50">
+                                      <td class="py-2.5 px-3 font-semibold text-slate-850">{s.name}</td>
+                                      <td class="py-2.5 px-3">
+                                        <span class={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                          s.category === 'clinic' ? 'bg-sky-50 text-sky-700' :
+                                          s.category === 'water' ? 'bg-indigo-50 text-indigo-700' :
+                                          s.category === 'pharmacy' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                                        }`}>{s.category}</span>
+                                      </td>
+                                      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-800">{s.observed}</td>
+                                      <td class="py-2.5 px-3 text-right font-mono text-slate-400">{s.baseline_mean}</td>
+                                      <td class="py-2.5 px-3 text-right font-mono font-semibold text-slate-700">{s.z_score}</td>
+                                      <td class={`py-2.5 px-3 text-right font-mono font-bold ${s.pct_deviation > 50 ? 'text-rose-600' : 'text-slate-600'}`}>
+                                        {s.pct_deviation > 0 ? `+${s.pct_deviation}%` : `${s.pct_deviation}%`}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                              <h4 class="text-sm font-bold text-slate-700 mb-2">Explainable AI (XAI) Breakdown</h4>
+                              <div class="h-44 relative">
+                                <canvas id="xaiChart"></canvas>
+                              </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                              <div>
+                                <h4 class="text-sm font-bold text-slate-700 mb-2">Actionable Decision Support</h4>
+                                {areaDetails.status === 'ELEVATED' || areaDetails.status === 'WATCH' ? (
+                                  <div class="p-3 bg-rose-50 border border-rose-100 rounded-lg text-xs">
+                                    <p class="font-bold text-rose-800 mb-1">📢 Response Directives:</p>
+                                    <ul class="list-disc pl-4 space-y-1 text-rose-700 font-medium">
+                                      <li>Deploy municipal water safety testing units.</li>
+                                      <li>Review OTC medication sale rates.</li>
+                                    </ul>
+                                  </div>
+                                ) : (
+                                  <div class="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-500 italic">
+                                    No immediate responses triggered.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-2">Privacy Audit Logs</h4>
+                            <div class="overflow-x-auto">
+                              <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                    <th class="py-2.5 px-3">Timestamp</th>
+                                    <th class="py-2.5 px-3">Signal</th>
+                                    <th class="py-2.5 px-3 text-right">Raw Count</th>
+                                    <th class="py-2.5 px-3 text-right">Noise Added</th>
+                                    <th class="py-2.5 px-3 text-right">Protected Transmitted</th>
+                                    <th class="py-2.5 px-3 text-center">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-600 font-mono">
+                                  {privacyAudits.length > 0 ? (
+                                    privacyAudits.map(aud => (
+                                      <tr key={aud.id}>
+                                        <td class="py-2 px-3 text-slate-400 text-[10px]">{aud.timestamp}</td>
+                                        <td class="py-2 px-3 text-slate-700 font-semibold">{aud.signal_id}</td>
+                                        <td class="py-2 px-3 text-right">{aud.raw_count}</td>
+                                        <td class={`py-2 px-3 text-right ${aud.noise_added > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{aud.noise_added}</td>
+                                        <td class="py-2 px-3 text-right text-slate-900 font-bold">{aud.noised_count || 'SUPPRESSED'}</td>
+                                        <td class="py-2 px-3 text-center">
+                                          <span class={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                                            aud.status === 'TRANSMITTED' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                          }`}>{aud.status}</span>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr>
+                                      <td colspan="6" class="py-4 text-center text-slate-400 italic">No audits logged. Use the 'Local Privacy Node' tab to simulate transmissions.</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                        </div>
+                      )
+                    ) : (
+                      <div class="py-8 text-center text-slate-400 bg-white border border-slate-200 rounded-xl">Loading details...</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* VIEW 4: LOCAL PRIVACY NODE */}
+            {currentView === 'privacy-node' && (
+              <div class="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                  <h3 class="text-2xl font-bold text-slate-800 mb-2 font-display">Local Clinic Privacy Node Simulator</h3>
+                  <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+                    This simulation runs locally inside your browser. Notice that patient IDs and room numbers are completely scrubbed and Laplace noise is added locally *before* transmitting aggregated statistics.
+                  </p>
+
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-5">
+                      <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Raw Patient Logs (Local Intranet)</h4>
+                        <span class="text-xs bg-rose-50 border border-rose-100 text-rose-700 px-2 py-0.5 rounded font-bold">Secure Local Boundary</span>
+                      </div>
+                      
+                      <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50">
+                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-200">
+                          {localRecords.map((rec, idx) => (
+                            <div key={idx} class="p-3 flex items-center justify-between text-xs hover:bg-slate-100 bg-white">
+                              <div>
+                                <span class="font-bold text-slate-700 mr-3">{rec.patient_id}</span>
+                                <span class="text-slate-400 mr-3">Age: {rec.age}</span>
+                                <span class="text-slate-400">Hostel: {rec.hostel}</span>
+                              </div>
+                              <span class="px-2 py-0.5 bg-rose-50 border border-rose-100 text-rose-800 font-bold rounded">{rec.symptom}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div class="p-4 border border-slate-100 rounded-xl bg-slate-50 grid grid-cols-4 gap-3 items-end">
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Patient ID</label>
+                          <input 
+                            type="text" 
+                            value={newPatient.patient_id} 
+                            onChange={(e) => setNewPatient({ ...newPatient, patient_id: e.target.value })}
+                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700" 
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age</label>
+                          <input 
+                            type="number" 
+                            value={newPatient.age} 
+                            onChange={(e) => setNewPatient({ ...newPatient, age: parseInt(e.target.value) || 0 })}
+                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700" 
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Symptom</label>
+                          <select 
+                            value={newPatient.symptom} 
+                            onChange={(e) => setNewPatient({ ...newPatient, symptom: e.target.value })}
+                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700">
+                            <option value="Diarrhea">Diarrhea</option>
+                            <option value="Fever">Fever</option>
+                            <option value="Cough">Cough</option>
+                          </select>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setLocalRecords([...localRecords, newPatient]);
+                            const num = parseInt(newPatient.patient_id.substring(1)) || 112;
+                            setNewPatient({ patient_id: `P${num+1}`, age: 22, hostel: "Hostel A", symptom: "Diarrhea" });
+                          }}
+                          class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition-colors">
+                          Add Record
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="space-y-6">
+                      <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Privacy Protection Engine & Payload Transmission</h4>
+                      <div class="grid grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Epsilon (&epsilon;)</label>
+                          <input 
+                            type="number" 
+                            step="0.1" 
+                            min="0.1" 
+                            max="10.0"
+                            value={localNodeEpsilon}
+                            onChange={(e) => setLocalNodeEpsilon(parseFloat(e.target.value) || 1.0)}
+                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-700" 
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sensitivity</label>
+                          <input 
+                            type="number" 
+                            step="0.5" 
+                            value={localNodeSensitivity}
+                            onChange={(e) => setLocalNodeSensitivity(parseFloat(e.target.value) || 1.0)}
+                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-700" 
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Min Group Size</label>
+                          <input 
+                            type="number" 
+                            value={localMinGroupSize}
+                            onChange={(e) => setLocalMinGroupSize(parseInt(e.target.value) || 10)}
+                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-750" 
+                          />
+                        </div>
+                      </div>
+
+                      <div class="flex items-center space-x-3">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Target Area</label>
+                        <select 
+                          value={selectedArea}
+                          onChange={(e) => setSelectedArea(e.target.value)}
+                          class="bg-white border border-slate-200 rounded text-xs font-semibold py-1.5 px-3 text-slate-705 shadow-sm">
+                          {INITIAL_AREAS.map(a => (
+                            <option key={a.id} value={a.id}>{a.name}</option>
+                          ))}
+                        </select>
+                        <button 
+                          onClick={handleLocalAggregate}
+                          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded shadow flex-grow">
+                          Aggregate, Protect & Transmit Payload
+                        </button>
+                      </div>
+
+                      {localAggregationResult && (
+                        <div class="bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs space-y-3">
+                          <p class="text-emerald-400 font-bold border-b border-slate-800 pb-2">
+                            ✓ PAYLOAD TRANSMITTED TO CENTRAL DB
+                          </p>
+                          <pre class="overflow-x-auto text-[11px] leading-relaxed">
+                            {JSON.stringify(localAggregationResult, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                  <h3 class="text-lg font-bold text-slate-800 mb-2">Differential Privacy Math Sandbox</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Original Value</label>
+                      <input type="number" value={dpInputValue} onChange={(e) => setDpInputValue(parseFloat(e.target.value) || 0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Epsilon (&epsilon;)</label>
+                      <input type="number" step="0.1" value={dpEpsilon} onChange={(e) => setDpEpsilon(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Sensitivity</label>
+                      <input type="number" step="0.5" value={dpSensitivity} onChange={(e) => setDpSensitivity(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                    </div>
+                    <button onClick={handleDpSandbox} class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm py-2.5 rounded-lg shadow transition-colors">
+                      Run DP Noise Calculator
+                    </button>
+                  </div>
+
+                  {dpResult && (
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 text-center font-mono">
+                      <div>
+                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Original Count</span>
+                        <span class="text-2xl font-bold text-slate-700">{dpResult.original_value}</span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Laplace Noise added</span>
+                        <span class={`text-2xl font-bold ${dpResult.noise_added > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {dpResult.noise_added > 0 ? '+' : ''}{dpResult.noise_added}
+                        </span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">DP Protected Count</span>
+                        <span class="text-2xl font-bold text-sky-600">{dpResult.protected_value}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 font-medium">
+            <p>SurakshaNet — Privacy-Preserving Community Health Anomaly Detection Platform Prototype</p>
+            <p class="mt-1 text-[10px] text-slate-300">Smart India Hackathon 2026 • Static Demonstration Deployment</p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

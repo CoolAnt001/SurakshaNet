@@ -9,6 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -41,6 +42,10 @@
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .dark body {
+      background-color: #0b0f19;
     }
     h1, h2, h3, .font-display {
       font-family: 'Outfit', sans-serif;
@@ -51,10 +56,18 @@
     }
     ::-webkit-scrollbar-track {
       background: #f1f5f9;
+      transition: background-color 0.3s ease;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #0f172a;
     }
     ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
     }
   </style>
 
@@ -304,6 +317,26 @@
       const [areasList, setAreasList] = useState([]);
       const [privacyAudits, setPrivacyAudits] = useState([]);
       const [localOverrides, setLocalOverrides] = useState({});
+      const [darkMode, setDarkMode] = useState(() => {
+        return localStorage.getItem('theme') === 'dark' || 
+          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      });
+
+      useEffect(() => {
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+      }, [darkMode]);
+
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
 
       // Node simulator states
       const [localNodeEpsilon, setLocalNodeEpsilon] = useState(1.0);
@@ -365,7 +398,7 @@
         return () => {
           destroyCharts();
         };
-      }, [areaDetails, currentView]);
+      }, [areaDetails, currentView, darkMode]);
 
       const destroyCharts = () => {
         const trendCanvas = document.getElementById('trendChart');
@@ -382,6 +415,10 @@
 
       const renderCharts = () => {
         destroyCharts();
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
 
         // 1. Trend Chart
         const trendCtx = document.getElementById('trendChart');
@@ -414,10 +451,22 @@
               responsive: true,
               maintainAspectRatio: false,
               scales: {
-                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                x: { grid: { display: false } }
+                y: { 
+                  beginAtZero: true, 
+                  grid: { color: gridColor },
+                  ticks: { color: textColor }
+                },
+                x: { 
+                  grid: { display: false },
+                  ticks: { color: textColor }
+                }
               },
-              plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }
+              plugins: { 
+                legend: { 
+                  position: 'top', 
+                  labels: { boxWidth: 12, color: textColor } 
+                } 
+              }
             }
           });
         }
@@ -439,14 +488,18 @@
                   '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1',
                   '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#a855f7'
                 ],
-                borderWidth: 1
+                borderWidth: 1,
+                borderColor: isDark ? '#0f172a' : '#ffffff'
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+                legend: { 
+                  position: 'right', 
+                  labels: { boxWidth: 10, font: { size: 10 }, color: textColor } 
+                }
               }
             }
           });
@@ -517,20 +570,19 @@
 
       const getStatusClass = (status) => {
         switch (status) {
-          case 'NORMAL': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-          case 'WATCH': return 'bg-amber-50 text-amber-700 border-amber-200';
-          case 'VERIFY': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-          case 'ELEVATED': return 'bg-rose-50 text-rose-700 border-rose-200';
-          case 'SUPPRESSED': return 'bg-slate-100 text-slate-600 border-slate-200';
-          default: return 'bg-slate-50 text-slate-600 border-slate-200';
+          case 'NORMAL': return 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50';
+          case 'WATCH': return 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-450 border-amber-200 dark:border-amber-900/50';
+          case 'VERIFY': return 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50';
+          case 'ELEVATED': return 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-450 border-rose-200 dark:border-rose-900/50';
+          case 'SUPPRESSED': return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700';
+          default: return 'bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-400 border-slate-200 dark:border-slate-700';
         }
       };
 
       return (
         <div class="min-h-screen flex flex-col font-sans">
-          
-          {/* Header */}
-          <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+           {/* Header */}
+          <header class="bg-white dark:bg-slate-900/90 dark:backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentView('landing')}>
@@ -538,8 +590,8 @@
                     <span class="font-bold text-xl tracking-tight">S</span>
                   </div>
                   <div>
-                    <h1 class="text-xl font-bold tracking-tight text-slate-800">SurakshaNet</h1>
-                    <p class="text-xs text-slate-500 font-medium">Privacy-Preserving Health Analytics</p>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">SurakshaNet</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Privacy-Preserving Health Analytics</p>
                   </div>
                 </div>
                 
@@ -547,68 +599,80 @@
                 <nav class="hidden md:flex space-x-6 text-sm font-semibold">
                   <button 
                     onClick={() => setCurrentView('landing')} 
-                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'landing' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'landing' ? 'border-sky-600 text-sky-600 dark:border-sky-500 dark:text-sky-400' : 'border-transparent text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     Overview
                   </button>
                   <button 
                     onClick={() => setCurrentView('citizen')} 
-                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'citizen' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'citizen' ? 'border-sky-600 text-sky-600 dark:border-sky-500 dark:text-sky-400' : 'border-transparent text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     Citizen View
                   </button>
                   <button 
                     onClick={() => setCurrentView('officer')} 
-                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'officer' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'officer' ? 'border-sky-600 text-sky-600 dark:border-sky-500 dark:text-sky-400' : 'border-transparent text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     Officer Dashboard
                   </button>
                   <button 
                     onClick={() => setCurrentView('privacy-node')} 
-                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'privacy-node' ? 'border-sky-600 text-sky-600' : 'border-transparent text-slate-600 hover:text-slate-800'}`}>
+                    class={`py-2 px-1 border-b-2 transition-colors ${currentView === 'privacy-node' ? 'border-sky-600 text-sky-600 dark:border-sky-500 dark:text-sky-400' : 'border-transparent text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     Local Privacy Node
                   </button>
                 </nav>
+ 
+                {/* Controls container */}
+                <div class="flex items-center space-x-3">
+                  {/* Scenario dropdown */}
+                  <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors duration-300">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase px-1">Scenario:</span>
+                    <select 
+                      value={activeScenario}
+                      onChange={(e) => { setActiveScenario(e.target.value); setLocalOverrides({}); }}
+                      class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-semibold py-1 px-2.5 text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-sky-500 transition-colors duration-300">
+                      {availableScenarios.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Scenario dropdown */}
-                <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
-                  <span class="text-xs font-bold text-slate-500 uppercase px-1">Scenario:</span>
-                  <select 
-                    value={activeScenario}
-                    onChange={(e) => { setActiveScenario(e.target.value); setLocalOverrides({}); }}
-                    class="bg-white border border-slate-200 rounded text-xs font-semibold py-1 px-2.5 text-slate-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-sky-500">
-                    {availableScenarios.map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
-                  </select>
+                  {/* Dark Mode Toggle */}
+                  <button 
+                    onClick={() => setDarkMode(!darkMode)}
+                    title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 flex items-center justify-center shadow-sm"
+                    aria-label="Toggle Dark Mode">
+                    <i data-lucide="sun" class={`h-4 w-4 text-amber-500 transition-transform duration-300 ${darkMode ? 'block' : 'hidden'}`}></i>
+                    <i data-lucide="moon" class={`h-4 w-4 text-sky-600 transition-transform duration-300 ${darkMode ? 'hidden' : 'block'}`}></i>
+                  </button>
                 </div>
               </div>
             </div>
           </header>
 
           <main class="flex-grow">
-            
-            {/* VIEW 1: LANDING */}
+               {/* VIEW 1: LANDING */}
             {currentView === 'landing' && (
               <div>
-                <section class="py-16 bg-gradient-to-b from-sky-50 via-sky-50/30 to-white border-b border-slate-100">
+                <section class="py-16 bg-gradient-to-b from-sky-50 via-sky-50/30 to-white dark:from-sky-950/20 dark:via-slate-900/10 dark:to-slate-950 border-b border-slate-100 dark:border-slate-800 transition-all duration-300">
                   <div class="max-w-4xl mx-auto text-center px-4">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800 mb-6">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 mb-6 transition-colors duration-300">
                       Smart India Hackathon Prototype (GitHub Pages Deployable)
                     </span>
-                    <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+                    <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 leading-tight transition-colors duration-300">
                       Detect Community Health Alerts <br/>
-                      <span class="text-sky-600">Without Centralizing Personal Records</span>
+                      <span class="text-sky-600 dark:text-sky-400">Without Centralizing Personal Records</span>
                     </h2>
-                    <p class="text-lg text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    <p class="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto leading-relaxed transition-colors duration-300">
                       SurakshaNet runs client-side differential privacy calculations, baseline Z-scoring, and multi-signal triangulation algorithms natively in your browser.
                     </p>
                     <div class="flex flex-wrap justify-center gap-4">
                       <button 
                         onClick={() => { setCurrentView('officer'); setSelectedArea('cda_sector_9'); }}
-                        class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-sky-600/20 transition-all">
+                        class="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-sky-600/20 transition-all">
                         Launch Officer Dashboard
                       </button>
                       <button 
                         onClick={() => setCurrentView('citizen')}
-                        class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors">
+                        class="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-6 py-3 rounded-lg transition-colors duration-300">
                         Enter Citizen Portal
                       </button>
                     </div>
@@ -616,34 +680,34 @@
                 </section>
 
                 <section class="py-16 max-w-5xl mx-auto px-4">
-                  <h3 class="text-2xl font-bold text-center text-slate-800 mb-12">How SurakshaNet Secures Data (Privacy Pipeline)</h3>
+                  <h3 class="text-2xl font-bold text-center text-slate-800 dark:text-slate-200 mb-12 transition-colors duration-300">How SurakshaNet Secures Data (Privacy Pipeline)</h3>
                   <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
-                      <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-3">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center transition-all duration-300">
+                      <div class="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center mb-3">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                       </div>
-                      <h4 class="font-bold text-slate-800 text-sm">Local Sources</h4>
-                      <p class="text-xs text-slate-500 mt-2">Clinic electronic medical records, pharmacies, and environmental monitors generate raw data.</p>
+                      <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm">Local Sources</h4>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Clinic electronic medical records, pharmacies, and environmental monitors generate raw data.</p>
                     </div>
-                    <div class="hidden md:flex items-center justify-center text-slate-400">
+                    <div class="hidden md:flex items-center justify-center text-slate-400 dark:text-slate-600">
                       <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </div>
-                    <div class="bg-sky-600 p-5 rounded-xl text-white shadow-md flex flex-col items-center text-center">
+                    <div class="bg-sky-600 dark:bg-sky-750 p-5 rounded-xl text-white shadow-md flex flex-col items-center text-center">
                       <div class="h-10 w-10 bg-white/20 text-white rounded-lg flex items-center justify-center mb-3">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                       </div>
                       <h4 class="font-bold text-sm">Privacy Layer</h4>
-                      <p class="text-xs text-sky-100 mt-2">Removes patient PII, scrubs names, applies Laplace noise, and suppresses count values below 10.</p>
+                      <p class="text-xs text-sky-100 dark:text-sky-200 mt-2">Removes patient PII, scrubs names, applies Laplace noise, and suppresses count values below 10.</p>
                     </div>
-                    <div class="hidden md:flex items-center justify-center text-slate-400">
+                    <div class="hidden md:flex items-center justify-center text-slate-400 dark:text-slate-600">
                       <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
-                      <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-3">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center transition-all duration-300">
+                      <div class="h-10 w-10 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center mb-3">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2" /></svg>
                       </div>
-                      <h4 class="font-bold text-slate-800 text-sm">Central Analytics</h4>
-                      <p class="text-xs text-slate-500 mt-2">Only receives protected aggregates. Evaluates anomaly scores, multi-signal weights, and triggers health alerts.</p>
+                      <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm">Central Analytics</h4>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Only receives protected aggregates. Evaluates anomaly scores, multi-signal weights, and triggers health alerts.</p>
                     </div>
                   </div>
                 </section>
@@ -653,16 +717,16 @@
             {/* VIEW 2: CITIZEN */}
             {currentView === 'citizen' && (
               <div class="max-w-4xl mx-auto py-12 px-4">
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-xl mx-auto">
-                  <h3 class="text-2xl font-bold text-slate-800 mb-2">Citizen Health Portal</h3>
-                  <p class="text-sm text-slate-500 mb-6 font-medium">Select your area to check current safety alerts.</p>
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-xl mx-auto transition-all duration-300">
+                  <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Citizen Health Portal</h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">Select your area to check current safety alerts.</p>
 
                   <div class="mb-6">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Your Region</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Select Your Region</label>
                     <select 
                       value={selectedArea}
                       onChange={(e) => setSelectedArea(e.target.value)}
-                      class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-700 focus:outline-none">
+                      class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none transition-colors duration-300">
                       {areasList.map(a => (
                         <option key={a.id} value={a.id}>{a.name}</option>
                       ))}
@@ -671,24 +735,24 @@
 
                   {areaDetails && (
                     areaDetails.status === "SUPPRESSED" ? (
-                      <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center text-slate-500">
-                        <p class="font-semibold text-sm mb-1 text-slate-700">Details Suppressed</p>
+                      <div class="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center text-slate-500 dark:text-slate-400 transition-colors duration-300">
+                        <p class="font-semibold text-sm mb-1 text-slate-700 dark:text-slate-300">Details Suppressed</p>
                         <p class="text-xs">No public health alerts or reports are available. This area has too few active reporters, maintaining small-group privacy.</p>
                       </div>
                     ) : (
                       <div class="space-y-6">
-                        <div class="border rounded-xl p-6 text-center shadow-sm bg-slate-50/50">
-                          <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Current Health Status</p>
-                          <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-white shadow-sm border border-slate-100 mt-2">
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center shadow-sm bg-slate-50/50 dark:bg-slate-950/30 transition-colors duration-300">
+                          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Current Health Status</p>
+                          <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mt-2 transition-colors duration-300">
                             <span class={`h-2.5 w-2.5 rounded-full mr-2 ${
                               areaDetails.status === 'NORMAL' ? 'bg-emerald-500' :
                               areaDetails.status === 'WATCH' ? 'bg-amber-500' :
                               areaDetails.status === 'VERIFY' ? 'bg-indigo-500' : 'bg-rose-500'
                             }`}></span>
-                            <span class="font-bold text-slate-700">{areaDetails.status}</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-300">{areaDetails.status}</span>
                           </span>
 
-                          <p class="text-sm font-semibold text-slate-750 mt-4 leading-relaxed px-4">
+                          <p class="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-4 leading-relaxed px-4">
                             {areaDetails.status === 'NORMAL' && "No significant unusual disease/symptom clusters are active in your sector. General precautions apply."}
                             {areaDetails.status === 'WATCH' && "Minor health indicators are elevated. Remain vigilant and monitor warnings."}
                             {areaDetails.status === 'VERIFY' && "An isolated reading is elevated. Local officials are verifying the source."}
@@ -696,15 +760,15 @@
                           </p>
                         </div>
 
-                        <div class="bg-sky-50 border border-sky-100 rounded-xl p-6">
-                          <h4 class="font-bold text-sky-950 text-sm mb-3">Recommended General Precautions:</h4>
-                          <ul class="space-y-3 text-sm text-sky-900 font-medium">
+                        <div class="bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 rounded-xl p-6 transition-colors duration-300">
+                          <h4 class="font-bold text-sky-950 dark:text-sky-300 text-sm mb-3">Recommended General Precautions:</h4>
+                          <ul class="space-y-3 text-sm text-sky-900 dark:text-sky-400 font-medium">
                             <li class="flex items-start">
-                              <span class="h-5 w-5 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
+                              <span class="h-5 w-5 bg-sky-200 dark:bg-sky-900 text-sky-800 dark:text-sky-300 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
                               <span>Always consume filtered or boiled drinking water.</span>
                             </li>
                             <li class="flex items-start">
-                              <span class="h-5 w-5 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
+                              <span class="h-5 w-5 bg-sky-200 dark:bg-sky-900 text-sky-800 dark:text-sky-300 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
                               <span>Maintain hand hygiene: wash hands before eating or preparing food.</span>
                             </li>
                           </ul>
@@ -721,43 +785,43 @@
               <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors duration-300">
                     <div>
-                      <p class="text-xs font-bold text-slate-400 uppercase">Monitored Areas</p>
-                      <h4 class="text-2xl font-bold text-slate-800 mt-1">{areasList.length}</h4>
+                      <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Monitored Areas</p>
+                      <h4 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{areasList.length}</h4>
                     </div>
-                    <div class="h-10 w-10 bg-sky-50 text-sky-600 rounded-lg flex items-center justify-center">
+                    <div class="h-10 w-10 bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400 rounded-lg flex items-center justify-center">
                       <i data-lucide="map" class="h-5 w-5"></i>
                     </div>
                   </div>
-                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors duration-300">
                     <div>
-                      <p class="text-xs font-bold text-slate-400 uppercase">Elevated Alerts</p>
-                      <h4 class="text-2xl font-bold text-rose-600 mt-1">
+                      <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Elevated Alerts</p>
+                      <h4 class="text-2xl font-bold text-rose-600 dark:text-rose-450 mt-1">
                         {areasList.filter(a => a.status === 'ELEVATED').length}
                       </h4>
                     </div>
-                    <div class="h-10 w-10 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center">
+                    <div class="h-10 w-10 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg flex items-center justify-center">
                       <i data-lucide="alert-triangle" class="h-5 w-5"></i>
                     </div>
                   </div>
-                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors duration-300">
                     <div>
-                      <p class="text-xs font-bold text-slate-400 uppercase">Verification Pending</p>
-                      <h4 class="text-2xl font-bold text-indigo-600 mt-1">
+                      <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Verification Pending</p>
+                      <h4 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
                         {areasList.filter(a => a.status === 'VERIFY').length}
                       </h4>
                     </div>
-                    <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <div class="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center">
                       <i data-lucide="check-square" class="h-5 w-5"></i>
                     </div>
                   </div>
-                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors duration-300">
                     <div>
-                      <p class="text-xs font-bold text-slate-400 uppercase">Privacy Noise Status</p>
-                      <h4 class="text-2xl font-bold text-emerald-600 mt-1">DP Active</h4>
+                      <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Privacy Noise Status</p>
+                      <h4 class="text-2xl font-bold text-emerald-600 dark:text-emerald-450 mt-1">DP Active</h4>
                     </div>
-                    <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
+                    <div class="h-10 w-10 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center">
                       <i data-lucide="shield" class="h-5 w-5"></i>
                     </div>
                   </div>
@@ -765,20 +829,20 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                      <h3 class="text-lg font-bold text-slate-800 mb-4 font-display">Area Status Map</h3>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                      <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 font-display">Area Status Map</h3>
                       <div class="grid grid-cols-2 gap-3">
                         {areasList.map(a => (
                           <div 
                             key={a.id} 
                             onClick={() => setSelectedArea(a.id)}
                             class={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                              selectedArea === a.id ? 'border-sky-600 ring-2 ring-sky-50' : 'border-slate-100 hover:border-slate-300'
-                            } bg-slate-50 flex flex-col justify-between h-28`}>
-                            <span class="text-xs font-bold text-slate-700 leading-tight">{a.name}</span>
+                              selectedArea === a.id ? 'border-sky-600 dark:border-sky-500 ring-2 ring-sky-50 dark:ring-sky-950/50 bg-sky-50/20 dark:bg-sky-950/20' : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-950'
+                            } flex flex-col justify-between h-28`}>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 leading-tight">{a.name}</span>
                             <div class="mt-4 flex items-center justify-between">
-                              <span class="text-[10px] text-slate-400 font-bold uppercase">Risk Score</span>
-                              <span class="text-xs font-extrabold text-slate-800">{a.risk_score}</span>
+                              <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Risk Score</span>
+                              <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{a.risk_score}</span>
                             </div>
                             <span class={`text-[10px] font-bold self-start mt-2 px-2 py-0.5 rounded-full border ${getStatusClass(a.status)}`}>
                               {a.status}
@@ -792,58 +856,58 @@
                   <div class="lg:col-span-2 space-y-6">
                     {areaDetails ? (
                       areaDetails.status === "SUPPRESSED" ? (
-                        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center">
-                          <h3 class="text-lg font-bold text-slate-800">Detailed Report Suppressed</h3>
-                          <p class="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
+                        <div class="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center transition-colors duration-300">
+                          <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Detailed Report Suppressed</h3>
+                          <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto">
                             The population group for <strong>{areaDetails.area_name}</strong> is {areaDetails.population} (below the minimum threshold of 10). Detailed analytics are suppressed to ensure differential privacy.
                           </p>
                         </div>
                       ) : (
                         <div class="space-y-6">
-                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                          <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
                             <div class="flex flex-wrap items-center justify-between mb-4 gap-3">
                               <div>
-                                <h3 class="text-xl font-bold text-slate-800 font-display">{areaDetails.area_name}</h3>
-                                <p class="text-xs text-slate-400 font-semibold mt-0.5">Current Active Scenario: <strong class="text-slate-650">{areaDetails.active_scenario}</strong></p>
+                                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 font-display">{areaDetails.area_name}</h3>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Current Active Scenario: <strong class="text-slate-650 dark:text-slate-350">{areaDetails.active_scenario}</strong></p>
                               </div>
                               <span class={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusClass(areaDetails.status)}`}>
                                 {areaDetails.status}
                               </span>
                             </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 py-4 my-4">
-                              <div class="text-center md:border-r border-slate-100">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Triangulated Risk</span>
-                                <span class="text-3xl font-extrabold text-slate-850 mt-1 block">{areaDetails.risk_score}<span class="text-sm text-slate-400 font-normal"> / 100</span></span>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 dark:border-slate-800 py-4 my-4">
+                              <div class="text-center md:border-r border-slate-100 dark:border-slate-800">
+                                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Triangulated Risk</span>
+                                <span class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{areaDetails.risk_score}<span class="text-sm text-slate-400 dark:text-slate-500 font-normal"> / 100</span></span>
                               </div>
-                              <div class="text-center md:border-r border-slate-100">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ML Anomaly Score</span>
-                                <span class="text-3xl font-extrabold text-slate-850 mt-1 block">{areaDetails.ml_anomaly_score}<span class="text-sm text-slate-400 font-normal"> / 100</span></span>
+                              <div class="text-center md:border-r border-slate-100 dark:border-slate-800">
+                                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">ML Anomaly Score</span>
+                                <span class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{areaDetails.ml_anomaly_score}<span class="text-sm text-slate-400 dark:text-slate-500 font-normal"> / 100</span></span>
                               </div>
-                              <div class="text-center font-bold text-slate-800">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Evidence Agreement</span>
-                                <span class="text-3xl font-extrabold mt-1 block text-slate-800">{areaDetails.confidence}</span>
+                              <div class="text-center font-bold text-slate-800 dark:text-slate-200">
+                                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Evidence Agreement</span>
+                                <span class="text-3xl font-extrabold mt-1 block text-slate-800 dark:text-slate-200">{areaDetails.confidence}</span>
                               </div>
                             </div>
 
-                            <p class="text-xs font-medium text-slate-600 bg-slate-50 border border-slate-100 p-3 rounded-lg leading-relaxed">
+                            <p class="text-xs font-medium text-slate-650 dark:text-slate-350 bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 p-3 rounded-lg leading-relaxed transition-colors duration-300">
                               <strong>Evaluation Summary:</strong> {areaDetails.reason}
                             </p>
                           </div>
 
-                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                            <h4 class="text-sm font-bold text-slate-700 mb-4">Signal Deviation from Baseline</h4>
+                          <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                            <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Signal Deviation from Baseline</h4>
                             <div class="h-64 relative">
                               <canvas id="trendChart"></canvas>
                             </div>
                           </div>
 
-                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <h4 class="text-sm font-bold text-slate-700 mb-4">Ingested Data Source Breakdown</h4>
+                          <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-300">
+                            <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Ingested Data Source Breakdown</h4>
                             <div class="overflow-x-auto">
                               <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                  <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-100">
+                                  <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 uppercase font-bold border-b border-slate-100 dark:border-slate-800">
                                     <th class="py-2.5 px-3">Signal Name</th>
                                     <th class="py-2.5 px-3">Category</th>
                                     <th class="py-2.5 px-3 text-right">Current Value</th>
@@ -852,21 +916,21 @@
                                     <th class="py-2.5 px-3 text-right">Deviation</th>
                                   </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100 text-slate-600">
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
                                   {areaDetails.signals.map(s => (
-                                    <tr key={s.id} class="hover:bg-slate-50">
-                                      <td class="py-2.5 px-3 font-semibold text-slate-850">{s.name}</td>
+                                    <tr key={s.id} class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                                      <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">{s.name}</td>
                                       <td class="py-2.5 px-3">
                                         <span class={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                          s.category === 'clinic' ? 'bg-sky-50 text-sky-700' :
-                                          s.category === 'water' ? 'bg-indigo-50 text-indigo-700' :
-                                          s.category === 'pharmacy' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                                          s.category === 'clinic' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400' :
+                                          s.category === 'water' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400' :
+                                          s.category === 'pharmacy' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
                                         }`}>{s.category}</span>
                                       </td>
-                                      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-800">{s.observed}</td>
-                                      <td class="py-2.5 px-3 text-right font-mono text-slate-400">{s.baseline_mean}</td>
-                                      <td class="py-2.5 px-3 text-right font-mono font-semibold text-slate-700">{s.z_score}</td>
-                                      <td class={`py-2.5 px-3 text-right font-mono font-bold ${s.pct_deviation > 50 ? 'text-rose-600' : 'text-slate-600'}`}>
+                                      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-800 dark:text-slate-200">{s.observed}</td>
+                                      <td class="py-2.5 px-3 text-right font-mono text-slate-400 dark:text-slate-550">{s.baseline_mean}</td>
+                                      <td class="py-2.5 px-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">{s.z_score}</td>
+                                      <td class={`py-2.5 px-3 text-right font-mono font-bold ${s.pct_deviation > 50 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'}`}>
                                         {s.pct_deviation > 0 ? `+${s.pct_deviation}%` : `${s.pct_deviation}%`}
                                       </td>
                                     </tr>
@@ -877,25 +941,25 @@
                           </div>
 
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                              <h4 class="text-sm font-bold text-slate-700 mb-2">Explainable AI (XAI) Breakdown</h4>
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                              <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Explainable AI (XAI) Breakdown</h4>
                               <div class="h-44 relative">
                                 <canvas id="xaiChart"></canvas>
                               </div>
                             </div>
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors duration-300">
                               <div>
-                                <h4 class="text-sm font-bold text-slate-700 mb-2">Actionable Decision Support</h4>
+                                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Actionable Decision Support</h4>
                                 {areaDetails.status === 'ELEVATED' || areaDetails.status === 'WATCH' ? (
-                                  <div class="p-3 bg-rose-50 border border-rose-100 rounded-lg text-xs">
-                                    <p class="font-bold text-rose-800 mb-1">📢 Response Directives:</p>
-                                    <ul class="list-disc pl-4 space-y-1 text-rose-700 font-medium">
+                                  <div class="p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-lg text-xs">
+                                    <p class="font-bold text-rose-800 dark:text-rose-350 mb-1">📢 Response Directives:</p>
+                                    <ul class="list-disc pl-4 space-y-1 text-rose-700 dark:text-rose-400 font-medium">
                                       <li>Deploy municipal water safety testing units.</li>
                                       <li>Review OTC medication sale rates.</li>
                                     </ul>
                                   </div>
                                 ) : (
-                                  <div class="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-500 italic">
+                                  <div class="p-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-lg text-xs text-slate-500 dark:text-slate-400 italic">
                                     No immediate responses triggered.
                                   </div>
                                 )}
@@ -903,12 +967,12 @@
                             </div>
                           </div>
 
-                          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                            <h4 class="text-sm font-bold text-slate-700 mb-2">Privacy Audit Logs</h4>
+                          <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                            <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Privacy Audit Logs</h4>
                             <div class="overflow-x-auto">
                               <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                  <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                  <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                                     <th class="py-2.5 px-3">Timestamp</th>
                                     <th class="py-2.5 px-3">Signal</th>
                                     <th class="py-2.5 px-3 text-right">Raw Count</th>
@@ -917,25 +981,25 @@
                                     <th class="py-2.5 px-3 text-center">Status</th>
                                   </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100 text-slate-600 font-mono">
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-650 dark:text-slate-300 font-mono">
                                   {privacyAudits.length > 0 ? (
                                     privacyAudits.map(aud => (
                                       <tr key={aud.id}>
-                                        <td class="py-2 px-3 text-slate-400 text-[10px]">{aud.timestamp}</td>
-                                        <td class="py-2 px-3 text-slate-700 font-semibold">{aud.signal_id}</td>
+                                        <td class="py-2 px-3 text-slate-400 dark:text-slate-500 text-[10px]">{aud.timestamp}</td>
+                                        <td class="py-2 px-3 text-slate-700 dark:text-slate-300 font-semibold">{aud.signal_id}</td>
                                         <td class="py-2 px-3 text-right">{aud.raw_count}</td>
-                                        <td class={`py-2 px-3 text-right ${aud.noise_added > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{aud.noise_added}</td>
-                                        <td class="py-2 px-3 text-right text-slate-900 font-bold">{aud.noised_count || 'SUPPRESSED'}</td>
+                                        <td class={`py-2 px-3 text-right ${aud.noise_added > 0 ? 'text-emerald-600 dark:text-emerald-450' : 'text-rose-650 dark:text-rose-455'}`}>{aud.noise_added}</td>
+                                        <td class="py-2 px-3 text-right text-slate-900 dark:text-slate-100 font-bold">{aud.noised_count || 'SUPPRESSED'}</td>
                                         <td class="py-2 px-3 text-center">
                                           <span class={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                                            aud.status === 'TRANSMITTED' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                            aud.status === 'TRANSMITTED' ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-400'
                                           }`}>{aud.status}</span>
                                         </td>
                                       </tr>
                                     ))
                                   ) : (
                                     <tr>
-                                      <td colspan="6" class="py-4 text-center text-slate-400 italic">No audits logged. Use the 'Local Privacy Node' tab to simulate transmissions.</td>
+                                      <td colspan="6" class="py-4 text-center text-slate-400 dark:text-slate-500 italic">No audits logged. Use the 'Local Privacy Node' tab to simulate transmissions.</td>
                                     </tr>
                                   )}
                                 </tbody>
@@ -946,7 +1010,7 @@
                         </div>
                       )
                     ) : (
-                      <div class="py-8 text-center text-slate-400 bg-white border border-slate-200 rounded-xl">Loading details...</div>
+                      <div class="py-8 text-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">Loading details...</div>
                     )}
                   </div>
                 </div>
@@ -956,59 +1020,59 @@
             {/* VIEW 4: LOCAL PRIVACY NODE */}
             {currentView === 'privacy-node' && (
               <div class="max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8">
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                  <h3 class="text-2xl font-bold text-slate-800 mb-2 font-display">Local Clinic Privacy Node Simulator</h3>
-                  <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                  <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 font-display">Local Clinic Privacy Node Simulator</h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                     This simulation runs locally inside your browser. Notice that patient IDs and room numbers are completely scrubbed and Laplace noise is added locally *before* transmitting aggregated statistics.
                   </p>
 
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="space-y-5">
                       <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Raw Patient Logs (Local Intranet)</h4>
-                        <span class="text-xs bg-rose-50 border border-rose-100 text-rose-700 px-2 py-0.5 rounded font-bold">Secure Local Boundary</span>
+                        <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Raw Patient Logs (Local Intranet)</h4>
+                        <span class="text-xs bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/55 text-rose-700 dark:text-rose-400 px-2 py-0.5 rounded font-bold">Secure Local Boundary</span>
                       </div>
                       
-                      <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50">
-                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-200">
+                      <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-950/20 transition-colors duration-300">
+                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800">
                           {localRecords.map((rec, idx) => (
-                            <div key={idx} class="p-3 flex items-center justify-between text-xs hover:bg-slate-100 bg-white">
+                            <div key={idx} class="p-3 flex items-center justify-between text-xs hover:bg-slate-100 dark:hover:bg-slate-800/40 bg-white dark:bg-slate-900 transition-colors duration-300">
                               <div>
-                                <span class="font-bold text-slate-700 mr-3">{rec.patient_id}</span>
-                                <span class="text-slate-400 mr-3">Age: {rec.age}</span>
-                                <span class="text-slate-400">Hostel: {rec.hostel}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-400 mr-3">{rec.patient_id}</span>
+                                <span class="text-slate-400 dark:text-slate-500 mr-3">Age: {rec.age}</span>
+                                <span class="text-slate-400 dark:text-slate-500">Hostel: {rec.hostel}</span>
                               </div>
-                              <span class="px-2 py-0.5 bg-rose-50 border border-rose-100 text-rose-800 font-bold rounded">{rec.symptom}</span>
+                              <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 text-rose-800 dark:text-rose-400 font-bold rounded">{rec.symptom}</span>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      <div class="p-4 border border-slate-100 rounded-xl bg-slate-50 grid grid-cols-4 gap-3 items-end">
+                      <div class="p-4 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/20 grid grid-cols-4 gap-3 items-end transition-colors duration-300">
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Patient ID</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Patient ID</label>
                           <input 
                             type="text" 
                             value={newPatient.patient_id} 
                             onChange={(e) => setNewPatient({ ...newPatient, patient_id: e.target.value })}
-                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700" 
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500" 
                           />
                         </div>
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Age</label>
                           <input 
                             type="number" 
                             value={newPatient.age} 
                             onChange={(e) => setNewPatient({ ...newPatient, age: parseInt(e.target.value) || 0 })}
-                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700" 
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500" 
                           />
                         </div>
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Symptom</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Symptom</label>
                           <select 
                             value={newPatient.symptom} 
                             onChange={(e) => setNewPatient({ ...newPatient, symptom: e.target.value })}
-                            class="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-700">
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500">
                             <option value="Diarrhea">Diarrhea</option>
                             <option value="Fever">Fever</option>
                             <option value="Cough">Cough</option>
@@ -1020,17 +1084,17 @@
                             const num = parseInt(newPatient.patient_id.substring(1)) || 112;
                             setNewPatient({ patient_id: `P${num+1}`, age: 22, hostel: "Hostel A", symptom: "Diarrhea" });
                           }}
-                          class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition-colors">
+                          class="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white text-xs font-bold py-2 px-3 rounded shadow transition-colors duration-300">
                           Add Record
                         </button>
                       </div>
                     </div>
 
                     <div class="space-y-6">
-                      <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Privacy Protection Engine & Payload Transmission</h4>
-                      <div class="grid grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                      <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Privacy Protection Engine & Payload Transmission</h4>
+                      <div class="grid grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-950/20 p-5 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors duration-300">
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Epsilon (&epsilon;)</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Epsilon (&epsilon;)</label>
                           <input 
                             type="number" 
                             step="0.1" 
@@ -1038,49 +1102,49 @@
                             max="10.0"
                             value={localNodeEpsilon}
                             onChange={(e) => setLocalNodeEpsilon(parseFloat(e.target.value) || 1.0)}
-                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-700" 
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500" 
                           />
                         </div>
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sensitivity</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Sensitivity</label>
                           <input 
                             type="number" 
                             step="0.5" 
                             value={localNodeSensitivity}
                             onChange={(e) => setLocalNodeSensitivity(parseFloat(e.target.value) || 1.0)}
-                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-700" 
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500" 
                           />
                         </div>
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Min Group Size</label>
+                          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Min Group Size</label>
                           <input 
                             type="number" 
                             value={localMinGroupSize}
                             onChange={(e) => setLocalMinGroupSize(parseInt(e.target.value) || 10)}
-                            class="w-full bg-white border border-slate-200 rounded p-2 text-xs text-slate-750" 
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500" 
                           />
                         </div>
                       </div>
-
+ 
                       <div class="flex items-center space-x-3">
-                        <label class="text-xs font-bold text-slate-500 uppercase">Target Area</label>
+                        <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Target Area</label>
                         <select 
                           value={selectedArea}
                           onChange={(e) => setSelectedArea(e.target.value)}
-                          class="bg-white border border-slate-200 rounded text-xs font-semibold py-1.5 px-3 text-slate-705 shadow-sm">
+                          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-semibold py-1.5 px-3 text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none transition-colors duration-300">
                           {INITIAL_AREAS.map(a => (
                             <option key={a.id} value={a.id}>{a.name}</option>
                           ))}
                         </select>
                         <button 
                           onClick={handleLocalAggregate}
-                          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded shadow flex-grow">
+                          class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold text-xs py-2.5 px-4 rounded shadow flex-grow transition-colors duration-300">
                           Aggregate, Protect & Transmit Payload
                         </button>
                       </div>
 
                       {localAggregationResult && (
-                        <div class="bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs space-y-3">
+                        <div class="bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 dark:border-slate-800 font-mono text-xs space-y-3">
                           <p class="text-emerald-400 font-bold border-b border-slate-800 pb-2">
                             ✓ PAYLOAD TRANSMITTED TO CENTRAL DB
                           </p>
@@ -1093,41 +1157,41 @@
                   </div>
                 </div>
 
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                  <h3 class="text-lg font-bold text-slate-800 mb-2">Differential Privacy Math Sandbox</h3>
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+                  <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Differential Privacy Math Sandbox</h3>
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                     <div>
-                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Original Value</label>
-                      <input type="number" value={dpInputValue} onChange={(e) => setDpInputValue(parseFloat(e.target.value) || 0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Original Value</label>
+                      <input type="number" value={dpInputValue} onChange={(e) => setDpInputValue(parseFloat(e.target.value) || 0)} class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none" />
                     </div>
                     <div>
-                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Epsilon (&epsilon;)</label>
-                      <input type="number" step="0.1" value={dpEpsilon} onChange={(e) => setDpEpsilon(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Epsilon (&epsilon;)</label>
+                      <input type="number" step="0.1" value={dpEpsilon} onChange={(e) => setDpEpsilon(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none" />
                     </div>
                     <div>
-                      <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Sensitivity</label>
-                      <input type="number" step="0.5" value={dpSensitivity} onChange={(e) => setDpSensitivity(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700" />
+                      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Sensitivity</label>
+                      <input type="number" step="0.5" value={dpSensitivity} onChange={(e) => setDpSensitivity(parseFloat(e.target.value) || 1.0)} class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none" />
                     </div>
-                    <button onClick={handleDpSandbox} class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm py-2.5 rounded-lg shadow transition-colors">
+                    <button onClick={handleDpSandbox} class="bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white font-bold text-sm py-2.5 rounded-lg shadow transition-colors duration-300">
                       Run DP Noise Calculator
                     </button>
                   </div>
 
                   {dpResult && (
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 text-center font-mono">
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center font-mono transition-colors duration-300">
                       <div>
-                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Original Count</span>
-                        <span class="text-2xl font-bold text-slate-700">{dpResult.original_value}</span>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 block mb-1 uppercase">Original Count</span>
+                        <span class="text-2xl font-bold text-slate-700 dark:text-slate-200">{dpResult.original_value}</span>
                       </div>
                       <div>
-                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Laplace Noise added</span>
-                        <span class={`text-2xl font-bold ${dpResult.noise_added > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 block mb-1 uppercase">Laplace Noise added</span>
+                        <span class={`text-2xl font-bold ${dpResult.noise_added > 0 ? 'text-emerald-600 dark:text-emerald-450' : 'text-rose-600 dark:text-rose-455'}`}>
                           {dpResult.noise_added > 0 ? '+' : ''}{dpResult.noise_added}
                         </span>
                       </div>
                       <div>
-                        <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">DP Protected Count</span>
-                        <span class="text-2xl font-bold text-sky-600">{dpResult.protected_value}</span>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 block mb-1 uppercase">DP Protected Count</span>
+                        <span class="text-2xl font-bold text-sky-600 dark:text-sky-400">{dpResult.protected_value}</span>
                       </div>
                     </div>
                   )}
@@ -1137,9 +1201,9 @@
 
           </main>
 
-          <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 font-medium">
+          <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium transition-colors duration-300">
             <p>SurakshaNet — Privacy-Preserving Community Health Anomaly Detection Platform Prototype</p>
-            <p class="mt-1 text-[10px] text-slate-300">Smart India Hackathon 2026 • Static Demonstration Deployment</p>
+            <p class="mt-1 text-[10px] text-slate-300 dark:text-slate-600">Smart India Hackathon 2026 • Static Demonstration Deployment</p>
           </footer>
 
         </div>

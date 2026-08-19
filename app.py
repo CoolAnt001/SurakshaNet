@@ -1074,12 +1074,12 @@ with tab_public:
             st.plotly_chart(fig_pub, use_container_width=True)
             
     with col_pub2:
+        st.markdown(f"<p style='text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: -20px; color: var(--text-color);'>{t['threat_prob']} (%)</p>", unsafe_allow_html=True)
         # Simple health rules gauge
         fig_gauge_pub = go.Figure(go.Indicator(
             mode = "gauge+number",
             value = agg_results["confidence"],
             domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': t['threat_prob'] + " (%)"},
             gauge = {
                 'axis': {'range': [0, 100], 'tickwidth': 1},
                 'bar': {'color': alert_border},
@@ -1096,7 +1096,7 @@ with tab_public:
         fig_gauge_pub.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             height=250,
-            margin=dict(t=30, b=10, l=30, r=30)
+            margin=dict(t=10, b=10, l=30, r=30)
         )
         st.plotly_chart(fig_gauge_pub, use_container_width=True)
 

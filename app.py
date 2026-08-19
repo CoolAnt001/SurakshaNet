@@ -4,8 +4,10 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import math
-from datetime import datetime
 import base64
+import requests
+import threading
+from datetime import datetime
 
 # --- Page Setup ---
 st.set_page_config(
@@ -13,6 +15,11 @@ st.set_page_config(
     page_icon="🛡️",
     layout="wide"
 )
+
+# --- Global Database Configuration ---
+# Set your Google Apps Script Web App URL here for universal cross-device persistence
+DEFAULT_GSHEET_URL = "https://script.google.com/macros/s/AKfycbzt_VXGXKrFKQltXEeXvqPjV0zHjSih0AMjQOcBwc-YwvhvmTJYe8om0NiFMbPPccZU/exec"
+
 
 # --- Custom CSS Styling (Premium Glassmorphism & Micro-animations) ---
 st.markdown("""
@@ -655,6 +662,9 @@ I18N = {
     }
 }
 
+if "gsheet_url" not in st.session_state:
+    st.session_state.gsheet_url = DEFAULT_GSHEET_URL
+
 st.sidebar.header(I18N["English"]["sidebar_lang_header"])
 selected_lang = st.sidebar.selectbox(
     "Select Display Language / ଭାଷା ବାଛନ୍ତୁ / भाषा चुनें",
@@ -668,6 +678,7 @@ st.sidebar.title(t["sidebar_title"])
 st.sidebar.markdown(t["sidebar_desc"])
 st.sidebar.markdown("---")
 st.sidebar.info(t["zero_central_policy"])
+
 
 # --- Top Navigation / Main Header ---
 col_head1, col_head2 = st.columns([2.5, 1])
@@ -777,10 +788,95 @@ if "k_anonymity" not in st.session_state:
     st.session_state.k_anonymity = 5
 if "false_alarm_threshold" not in st.session_state:
     st.session_state.false_alarm_threshold = 2.5
+if "gsheet_url" not in st.session_state:
+    st.session_state.gsheet_url = DEFAULT_GSHEET_URL
+if "gsheet_logs_cache" not in st.session_state:
+    st.session_state.gsheet_logs_cache = []
+if "gsheet_cache_dirty" not in st.session_state:
+    st.session_state.gsheet_cache_dirty = True
+
 
 epsilon = st.session_state.epsilon
 k_anonymity = st.session_state.k_anonymity
 false_alarm_threshold = st.session_state.false_alarm_threshold
+gsheet_url = st.session_state.gsheet_url
+
+# --- Google Sheets API Connectors ---
+@st.cache_data(ttl=30)
+def get_gsheet_logs(url):
+    """Cached fetch — hits Google Sheets at most once every 30 seconds."""
+    if not url:
+        return []
+    try:
+        response = requests.get(url, timeout=8)
+        if response.status_code == 200:
+            return response.json()
+    except Exception:
+        pass
+    return []
+
+def _invalidate_gsheet_cache():
+    """Clear the log cache so the next render fetches fresh data."""
+    get_gsheet_logs.clear()
+    st.session_state.gsheet_cache_dirty = True
+
+def fetch_gsheet_logs_cached(url):
+    """Wrapper that resolves local cached logs instantly or triggers a refresh."""
+    if not url:
+        return []
+    if not st.session_state.gsheet_logs_cache or st.session_state.gsheet_cache_dirty:
+        st.session_state.gsheet_logs_cache = get_gsheet_logs(url)
+        st.session_state.gsheet_cache_dirty = False
+    return st.session_state.gsheet_logs_cache
+
+def add_gsheet_log(url, node_id, log):
+    if not url:
+        return
+    # Optimistic local UI update (instant UI addition)
+    temp_row_id = len(st.session_state.gsheet_logs_cache)
+    optimistic_log = {
+        "row_id": temp_row_id,
+        "node_id": node_id,
+        "symptom": log["symptom"],
+        "location": log["location"],
+        "raw_val": log["raw_val"],
+        "details": log["details"]
+    }
+    st.session_state.gsheet_logs_cache.append(optimistic_log)
+    
+    def _send():
+        try:
+            payload = {
+                "action": "add",
+                "node_id": node_id,
+                "symptom": log["symptom"],
+                "location": log["location"],
+                "raw_val": float(log["raw_val"]),
+                "details": log["details"]
+            }
+            requests.post(url, json=payload, timeout=10)
+            _invalidate_gsheet_cache()
+        except Exception:
+            pass
+    threading.Thread(target=_send, daemon=True).start()
+
+def delete_gsheet_log(url, row_id):
+    if not url:
+        return
+    # Optimistic local UI update (instant UI deletion)
+    st.session_state.gsheet_logs_cache = [
+        l for l in st.session_state.gsheet_logs_cache if l.get("row_id") != row_id
+    ]
+    
+    def _send():
+        try:
+            payload = {"action": "delete", "row_id": int(row_id)}
+            requests.post(url, json=payload, timeout=10)
+            _invalidate_gsheet_cache()
+        except Exception:
+            pass
+    threading.Thread(target=_send, daemon=True).start()
+
 
 # --- Data Generation Helper ---
 def generate_node_data(scenario, epsilon, k_anonymity):
@@ -806,11 +902,22 @@ def generate_node_data(scenario, epsilon, k_anonymity):
         manual_sums = {}
         for m_id in node_info["metrics"].keys():
             manual_sums[m_id] = 0.0
-        if "local_logs" in st.session_state and node_id in st.session_state.local_logs:
-            for log in st.session_state.local_logs[node_id]:
-                m_id = log["symptom"]
-                if m_id in manual_sums:
-                    manual_sums[m_id] += log["raw_val"]
+            
+        # Determine source of logs (Google Sheet or Local Session State)
+        active_gsheet_url = st.session_state.gsheet_url
+        if active_gsheet_url:
+            sheet_logs = fetch_gsheet_logs_cached(active_gsheet_url)
+            for log in sheet_logs:
+                if log.get("node_id") == node_id:
+                    m_id = log.get("symptom")
+                    if m_id in manual_sums:
+                        manual_sums[m_id] += log.get("raw_val", 0.0)
+        else:
+            if "local_logs" in st.session_state and node_id in st.session_state.local_logs:
+                for log in st.session_state.local_logs[node_id]:
+                    m_id = log["symptom"]
+                    if m_id in manual_sums:
+                        manual_sums[m_id] += log["raw_val"]
                     
         for metric_id, metric_info in node_info["metrics"].items():
             mean = metric_info["baseline_mean"]
@@ -1273,12 +1380,16 @@ with tab_clinic:
                 )
                 
             if st.button(t["submit_btn"], type="primary", use_container_width=True):
-                st.session_state.local_logs[selected_node_id].append({
+                new_log = {
                     "symptom": selected_symptom,
                     "location": location_input,
                     "raw_val": float(raw_case_count),
                     "details": clinical_details
-                })
+                }
+                if st.session_state.gsheet_url:
+                    add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
+                else:
+                    st.session_state.local_logs[selected_node_id].append(new_log)
                 st.success(t["log_success"])
                 st.rerun()
                 
@@ -1314,12 +1425,16 @@ with tab_clinic:
                     ivr_loc = st.selectbox("Location Code:", ["Hostel 1", "Hostel 2", "Hostel 3", "General Campus"])
                     
                     if st.button("📲 Submit Code (#)", use_container_width=True):
-                        st.session_state.local_logs[selected_node_id].append({
+                        new_log = {
                             "symptom": ivr_symptom,
                             "location": ivr_loc,
                             "raw_val": float(ivr_count),
                             "details": "Logged via Voice Gateway"
-                        })
+                        }
+                        if st.session_state.gsheet_url:
+                            add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
+                        else:
+                            st.session_state.local_logs[selected_node_id].append(new_log)
                         st.session_state.ivr_call_active = False
                         st.success(t["log_success"])
                         st.rerun()
@@ -1333,12 +1448,16 @@ with tab_clinic:
             if uploaded_file is not None or sim_scan:
                 st.success("OCR Scan Successful! Extracted: 14 Cases (Diarrhea) from Hostel A.")
                 if st.button("🚀 Upload Extracted OCR Data", use_container_width=True):
-                    st.session_state.local_logs[selected_node_id].append({
+                    new_log = {
                         "symptom": symptom_options[0],
                         "location": "Hostel A",
                         "raw_val": 14.0,
                         "details": "OCR Hand-written Scanner Scan"
-                    })
+                    }
+                    if st.session_state.gsheet_url:
+                        add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
+                    else:
+                        st.session_state.local_logs[selected_node_id].append(new_log)
                     st.success(t["log_success"])
                     st.rerun()
                     
@@ -1346,42 +1465,87 @@ with tab_clinic:
             st.markdown("#### Database Synchronizer Daemon")
             st.code("# Secure Connector pushes anonymized averages directly.\nresult = db.query('SELECT COUNT(*) FROM patient_logs')\nupload_safely(result)", language="python")
             if st.button("🔄 Trigger Sync Sync Simulation", use_container_width=True, type="primary"):
-                st.session_state.local_logs[selected_node_id].append({
+                new_log = {
                     "symptom": symptom_options[0],
                     "location": "Main Center",
                     "raw_val": 35.0,
                     "details": "Hospital Database Sync Link"
-                })
+                }
+                if st.session_state.gsheet_url:
+                    add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
+                else:
+                    st.session_state.local_logs[selected_node_id].append(new_log)
                 st.success(t["log_success"])
                 st.rerun()
 
         # Log table
         st.markdown(f"#### {t['logbook_title']}")
-        if not st.session_state.local_logs[selected_node_id]:
+        
+        # Resolve active logs list
+        active_gsheet_url = st.session_state.gsheet_url
+        if active_gsheet_url:
+            all_logs = fetch_gsheet_logs_cached(active_gsheet_url)
+            active_node_logs = []
+            for log in all_logs:
+                if log.get("node_id") == selected_node_id:
+                    active_node_logs.append(log)
+        else:
+            active_node_logs = []
+            for idx, log in enumerate(st.session_state.local_logs[selected_node_id]):
+                active_node_logs.append({
+                    "row_id": idx,
+                    "symptom": log["symptom"],
+                    "location": log["location"],
+                    "raw_val": log["raw_val"],
+                    "details": log["details"]
+                })
+                
+        if not active_node_logs:
             st.info(t["log_info"])
         else:
-            node_logs = []
-            for log in st.session_state.local_logs[selected_node_id]:
+            for log in active_node_logs:
                 is_count_log = NODES[selected_node_id]["metrics"][log["symptom"]]["is_count"]
                 log_noise = np.random.laplace(0, (1.0 if is_count_log else 0.5) / epsilon)
                 log_dp = log["raw_val"] + log_noise
                 log_dp = max(0.0, float(round(log_dp))) if is_count_log else max(0.0, round(log_dp, 2))
                 log_suppressed = is_count_log and log["raw_val"] < k_anonymity
                 
-                node_logs.append({
-                    "Symptom": symptom_labels[log["symptom"]],
-                    "Entered Hostel": log["location"],
-                    "Raw Count": log["raw_val"],
-                    "Uploaded Count": 0.0 if log_suppressed else log_dp,
-                    "Shared Location": "General (Masked)" if log_suppressed else log["location"],
-                    "Identity Protection Status": "❌ Masked/Suppressed" if log_suppressed else "✅ Safe Upload",
-                    "Details": log["details"]
-                })
-            st.dataframe(pd.DataFrame(node_logs), use_container_width=True, hide_index=True)
-            if st.button(t["clear_btn"]):
-                st.session_state.local_logs[selected_node_id] = []
-                st.success("Cleared.")
-                st.rerun()
+                col_l1, col_l2, col_l3 = st.columns([5, 2, 1.2])
+                with col_l1:
+                    st.markdown(
+                        f"""
+                        <div style='background: rgba(255,255,255,0.03); border: 1px solid rgba(128,128,128,0.15); border-left: 4px solid var(--primary-color); padding: 12px; border-radius: 8px; margin-bottom: 10px;'>
+                            <strong style='font-size: 1.05rem;'>{symptom_labels[log["symptom"]]}</strong><br>
+                            <span style='font-size: 0.85rem; opacity: 0.85;'>📍 Location: {log["location"]} | Count: <strong>{log["raw_val"]}</strong></span><br>
+                            <span style='font-size: 0.8rem; opacity: 0.7;'>📝 Notes: {log["details"]}</span>
+                        </div>
+                        """, unsafe_allow_html=True
+                    )
+                with col_l2:
+                    badge_color = "#10B981" if not log_suppressed else "#EF4444"
+                    status_badge = f"<span style='color:{badge_color}; font-weight:bold;'>{'✅ Safe Upload' if not log_suppressed else '❌ Suppressed'}</span>"
+                    st.markdown(
+                        f"""
+                        <div style='text-align: left; padding: 12px 5px;'>
+                            <span style='font-size:0.85rem;'>{status_badge}</span><br>
+                            <span style='font-size:0.85rem; opacity:0.8;'>Shared: {0.0 if log_suppressed else log_dp}</span>
+                        </div>
+                        """, unsafe_allow_html=True
+                    )
+                with col_l3:
+                    st.markdown("<div style='padding-top: 18px;'>", unsafe_allow_html=True)
+                    if st.button("🗑️", key=f"del_log_{selected_node_id}_{log['row_id']}", use_container_width=True, help="Delete this entry"):
+                        if active_gsheet_url:
+                            delete_gsheet_log(active_gsheet_url, log["row_id"])
+                        else:
+                            st.session_state.local_logs[selected_node_id].pop(log["row_id"])
+                        st.success("Entry deleted!")
+                        st.rerun()
+            if not active_gsheet_url:
+                if st.button(t["clear_btn"]):
+                    st.session_state.local_logs[selected_node_id] = []
+                    st.success("Cleared.")
+                    st.rerun()
 
 # ==============================================================================
 # TAB 3: HEALTH OFFICER CONSOLE (TERTIARY - HEALTH OFFICERS)
@@ -1410,6 +1574,44 @@ with tab_officer:
     else:
         st.markdown(f"### {t['officer_title']}")
         st.markdown(t['officer_desc'])
+
+        # Google Sheet Sync — Officer-Only Database Configuration
+        st.markdown("---")
+        st.markdown(
+            """
+            <div class='glass-card' style='border-top: 3px solid #00F2FE;'>
+                <h4 style='margin: 0 0 8px 0;'>🔗 Shared Database Configuration</h4>
+                <p style='font-size: 0.9rem; opacity: 0.8; margin-bottom: 15px;'>
+                    Connect to a Google Sheet to enable real-time shared data across all clinic nodes. 
+                    Only Health Officers can configure this setting.
+                </p>
+            </div>
+            """, unsafe_allow_html=True
+        )
+        gsheet_url_officer = st.text_input(
+            "Google Apps Script Web App URL",
+            value=st.session_state.gsheet_url,
+            placeholder="https://script.google.com/macros/s/.../exec",
+            help="Paste the Google Apps Script Web App URL here. All case submissions will sync to the shared Google Sheet.",
+            key="officer_gsheet_url"
+        )
+        col_gs1, col_gs2 = st.columns(2)
+        with col_gs1:
+            if st.button("✅ Save & Enable Shared DB", type="primary", use_container_width=True):
+                st.session_state.gsheet_url = gsheet_url_officer
+                st.success("✅ Google Sheet connected! All case reports will now sync to the shared database.")
+                st.rerun()
+        with col_gs2:
+            if st.button("🚫 Disconnect Google Sheet", use_container_width=True):
+                st.session_state.gsheet_url = ""
+                st.success("Disconnected. App is now using local session memory.")
+                st.rerun()
+        if st.session_state.gsheet_url:
+            st.markdown(f"<p style='color:#10B981; font-size:0.85rem;'>🟢 <strong>Connected:</strong> {st.session_state.gsheet_url[:60]}...</p>", unsafe_allow_html=True)
+        else:
+            st.markdown("<p style='color:#F59E0B; font-size:0.85rem;'>🟡 <strong>Disconnected:</strong> Using local session memory (data resets on reload).</p>", unsafe_allow_html=True)
+        st.markdown("---")
+
         st.markdown(f"### {t['sec_controls']}")
         
         # Active controls inside passcode-protected tab

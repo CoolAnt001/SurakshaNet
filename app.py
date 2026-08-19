@@ -770,11 +770,11 @@ if "ivr_call_active" not in st.session_state:
 if "local_logs" not in st.session_state:
     st.session_state.local_logs = {
         "node_campus": [
-            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 12.0, "details": "Stomach cramps, vomiting"},
-            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "details": "Dry cough"}
+            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 12.0, "timestamp": "Today, 10:30 AM", "details": "Stomach cramps, vomiting"},
+            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "Today, 09:15 AM", "details": "Dry cough"}
         ],
         "node_soa": [
-            {"symptom": "fever", "location": "Hostel B", "raw_val": 15.0, "details": "High fever, chills"}
+            {"symptom": "fever", "location": "Hostel B", "raw_val": 15.0, "timestamp": "Today, 11:45 AM", "details": "High fever, chills"}
         ],
         "node_hospital": [],
         "node_water": [],
@@ -833,13 +833,18 @@ def add_gsheet_log(url, node_id, log):
     if not url:
         return
     # Optimistic local UI update (instant UI addition)
-    temp_row_id = len(st.session_state.gsheet_logs_cache)
+    max_existing_id = max([int(l.get("row_id", 0)) for l in st.session_state.gsheet_logs_cache], default=0)
+    temp_row_id = max_existing_id + 1
+    log_time = log.get("timestamp", datetime.now().strftime("%d %b %Y, %I:%M %p"))
+    node_name = NODES.get(node_id, {}).get("name", node_id)
     optimistic_log = {
         "row_id": temp_row_id,
         "node_id": node_id,
+        "node_name": node_name,
         "symptom": log["symptom"],
         "location": log["location"],
         "raw_val": log["raw_val"],
+        "timestamp": log_time,
         "details": log["details"]
     }
     st.session_state.gsheet_logs_cache.append(optimistic_log)
@@ -849,9 +854,11 @@ def add_gsheet_log(url, node_id, log):
             payload = {
                 "action": "add",
                 "node_id": node_id,
+                "node_name": node_name,
                 "symptom": log["symptom"],
                 "location": log["location"],
                 "raw_val": float(log["raw_val"]),
+                "timestamp": log_time,
                 "details": log["details"]
             }
             requests.post(url, json=payload, timeout=10)
@@ -1312,33 +1319,77 @@ with tab_clinic:
         symptom_options = list(NODES[selected_node_id]["metrics"].keys())
         symptom_labels = {k: NODES[selected_node_id]["metrics"][k]["label"] for k in symptom_options}
         
+        # Dynamic context adapting to node type (Clinic vs Water Quality vs Weather)
+        if selected_node_id == "node_water":
+            category_title = "Select Water Quality Indicator / Test"
+            tally_title = "Measured Sensor / Lab Reading"
+            loc_title = "Sampling Site / Reservoir Zone"
+            loc_options = ["Treatment Plant Inlet", "Main Reservoir Tank 1", "Distribution Line North", "Campus Storage Tank", "Municipal Outfall B"]
+            default_val = 1.2
+            step_val = 0.1
+            min_val = 0.0
+            max_val = 200.0
+            notes_placeholder = "e.g. High turbidity recorded after pipeline flush."
+            local_card_title = "Local Sensor / Lab Record"
+            transmitted_card_title = "DP-Perturbed Sensor Value"
+            item_header_text = "Parameter"
+            val_header_text = "Reading"
+        elif selected_node_id == "node_weather":
+            category_title = "Select Weather / Climate Parameter"
+            tally_title = "Recorded Sensor Metric Value"
+            loc_title = "Weather Station / Sensor Tower"
+            loc_options = ["Bhubaneswar Main Hub", "Airport Met Tower", "Coastal Weather Sensor", "North Campus Station"]
+            default_val = 28.5
+            step_val = 0.5
+            min_val = -10.0
+            max_val = 120.0
+            notes_placeholder = "e.g. Flash rainfall and humidity surge recorded."
+            local_card_title = "Local Meteorological Log"
+            transmitted_card_title = "Aggregated Weather Metric"
+            item_header_text = "Parameter"
+            val_header_text = "Value"
+        else:
+            category_title = t["ingest_symptom"]
+            tally_title = t["ingest_tally"]
+            loc_title = t["ingest_loc"]
+            loc_options = ["Hostel 1", "Hostel 2", "Hostel 3", "Hostel A", "Hostel B", "Outpatient Ward 1", "General Campus"]
+            default_val = 5.0
+            step_val = 1.0
+            min_val = 1.0
+            max_val = 200.0
+            notes_placeholder = "e.g. Stomach cramps, vomiting. No personal details."
+            local_card_title = t["local_record_title"]
+            transmitted_card_title = t["transmitted_payload_title"]
+            item_header_text = "Symptom"
+            val_header_text = "Count"
+
         # Ingestion Options
         if t["opt1"] in ingest_method:
             ingest_col1, ingest_col2 = st.columns(2)
             with ingest_col1:
                 selected_symptom = st.selectbox(
-                    t["ingest_symptom"],
+                    category_title,
                     options=symptom_options,
                     format_func=lambda x: symptom_labels[x],
                     key="ingest_symptom_select"
                 )
                 location_input = st.selectbox(
-                    t["ingest_loc"],
-                    ["Hostel 1", "Hostel 2", "Hostel 3", "Hostel A", "Hostel B", "Main Campus", "Regional Area"],
+                    loc_title,
+                    loc_options,
                     key="ingest_location_select"
                 )
             with ingest_col2:
                 raw_case_count = st.number_input(
-                    t["ingest_tally"],
-                    min_value=1,
-                    max_value=150,
-                    value=5,
-                    step=1,
+                    tally_title,
+                    min_value=float(min_val),
+                    max_value=float(max_val),
+                    value=float(default_val),
+                    step=float(step_val),
                     key="ingest_case_count"
                 )
                 clinical_details = st.text_input(
                     t["ingest_notes"],
-                    placeholder="e.g. Diarrhea. No personal details.",
+                    placeholder=notes_placeholder,
                     key="ingest_clinical_details"
                 )
                 
@@ -1353,17 +1404,17 @@ with tab_clinic:
             
             sim_suppressed = is_count_item and raw_case_count < k_anonymity
             sim_transmitted_tally = 0.0 if sim_suppressed else sim_dp
-            sim_transmitted_location = "General Campus (Masked)" if sim_suppressed else location_input
+            sim_transmitted_location = "General Regional Grid (Masked)" if sim_suppressed else location_input
             
             prev_col1, prev_col2 = st.columns(2)
             with prev_col1:
                 st.markdown(
                     f"""
                     <div style='background-color: var(--secondary-background-color); color: var(--text-color); border: 1px solid rgba(128,128,128,0.2); border-left:4px solid #38BDF8; padding:12px; border-radius:6px;'>
-                        <strong style='color:#38BDF8;'>{t['local_record_title']}</strong><br>
-                        • Symptom: {symptom_labels[selected_symptom]}<br>
-                        • Original Count: <strong>{raw_case_count}</strong><br>
-                        • Hostel: {location_input}
+                        <strong style='color:#38BDF8;'>{local_card_title}</strong><br>
+                        • {item_header_text}: {symptom_labels[selected_symptom]}<br>
+                        • Original {val_header_text}: <strong>{raw_case_count}</strong><br>
+                        • Site: {location_input}
                     </div>
                     """, unsafe_allow_html=True
                 )
@@ -1372,9 +1423,9 @@ with tab_clinic:
                 st.markdown(
                     f"""
                     <div style='background-color: var(--secondary-background-color); color: var(--text-color); border: 1px solid rgba(128,128,128,0.2); border-left:4px solid #00F2FE; padding:12px; border-radius:6px;'>
-                        <strong style='color:#00F2FE;'>{t['transmitted_payload_title']}</strong><br>
-                        • Uploaded Count: <strong>{sim_transmitted_tally}</strong> ({suppress_alert})<br>
-                        • Uploaded Area: <strong>{sim_transmitted_location}</strong>
+                        <strong style='color:#00F2FE;'>{transmitted_card_title}</strong><br>
+                        • Uploaded Value: <strong>{sim_transmitted_tally}</strong> ({suppress_alert})<br>
+                        • Uploaded Site: <strong>{sim_transmitted_location}</strong>
                     </div>
                     """, unsafe_allow_html=True
                 )
@@ -1384,6 +1435,7 @@ with tab_clinic:
                     "symptom": selected_symptom,
                     "location": location_input,
                     "raw_val": float(raw_case_count),
+                    "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
                     "details": clinical_details
                 }
                 if st.session_state.gsheet_url:
@@ -1429,6 +1481,7 @@ with tab_clinic:
                             "symptom": ivr_symptom,
                             "location": ivr_loc,
                             "raw_val": float(ivr_count),
+                            "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
                             "details": "Logged via Voice Gateway"
                         }
                         if st.session_state.gsheet_url:
@@ -1452,6 +1505,7 @@ with tab_clinic:
                         "symptom": symptom_options[0],
                         "location": "Hostel A",
                         "raw_val": 14.0,
+                        "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
                         "details": "OCR Hand-written Scanner Scan"
                     }
                     if st.session_state.gsheet_url:
@@ -1469,6 +1523,7 @@ with tab_clinic:
                     "symptom": symptom_options[0],
                     "location": "Main Center",
                     "raw_val": 35.0,
+                    "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
                     "details": "Hospital Database Sync Link"
                 }
                 if st.session_state.gsheet_url:
@@ -1497,27 +1552,42 @@ with tab_clinic:
                     "symptom": log["symptom"],
                     "location": log["location"],
                     "raw_val": log["raw_val"],
+                    "timestamp": log.get("timestamp", "Recent"),
                     "details": log["details"]
                 })
                 
         if not active_node_logs:
             st.info(t["log_info"])
         else:
-            for log in active_node_logs:
+            for idx, log in enumerate(active_node_logs):
                 is_count_log = NODES[selected_node_id]["metrics"][log["symptom"]]["is_count"]
                 log_noise = np.random.laplace(0, (1.0 if is_count_log else 0.5) / epsilon)
                 log_dp = log["raw_val"] + log_noise
                 log_dp = max(0.0, float(round(log_dp))) if is_count_log else max(0.0, round(log_dp, 2))
                 log_suppressed = is_count_log and log["raw_val"] < k_anonymity
                 
+                time_badge = log.get("timestamp")
+                if not time_badge or time_badge == "Recent":
+                    details_str = log.get("details", "")
+                    if details_str.startswith("[") and "]" in details_str:
+                        time_badge = details_str[1:details_str.find("]")]
+                    else:
+                        time_badge = datetime.now().strftime("%d %b, %I:%M %p")
+                        
                 col_l1, col_l2, col_l3 = st.columns([5, 2, 1.2])
                 with col_l1:
+                    clean_notes = log["details"]
+                    if clean_notes.startswith("[") and "]" in clean_notes:
+                        clean_notes = clean_notes[clean_notes.find("]")+1:].strip()
                     st.markdown(
                         f"""
                         <div style='background: rgba(255,255,255,0.03); border: 1px solid rgba(128,128,128,0.15); border-left: 4px solid var(--primary-color); padding: 12px; border-radius: 8px; margin-bottom: 10px;'>
-                            <strong style='font-size: 1.05rem;'>{symptom_labels[log["symptom"]]}</strong><br>
-                            <span style='font-size: 0.85rem; opacity: 0.85;'>📍 Location: {log["location"]} | Count: <strong>{log["raw_val"]}</strong></span><br>
-                            <span style='font-size: 0.8rem; opacity: 0.7;'>📝 Notes: {log["details"]}</span>
+                            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                                <strong style='font-size: 1.05rem;'>{symptom_labels.get(log["symptom"], log["symptom"])}</strong>
+                                <span style='font-size: 0.78rem; opacity: 0.7; background: rgba(128,128,128,0.15); padding: 2px 8px; border-radius: 4px;'>🕒 {time_badge}</span>
+                            </div>
+                            <span style='font-size: 0.85rem; opacity: 0.85;'>📍 Location: {log["location"]} | {val_header_text}: <strong>{log["raw_val"]}</strong></span><br>
+                            <span style='font-size: 0.8rem; opacity: 0.7;'>📝 Notes: {clean_notes if clean_notes else 'None'}</span>
                         </div>
                         """, unsafe_allow_html=True
                     )
@@ -1534,11 +1604,12 @@ with tab_clinic:
                     )
                 with col_l3:
                     st.markdown("<div style='padding-top: 18px;'>", unsafe_allow_html=True)
-                    if st.button("🗑️", key=f"del_log_{selected_node_id}_{log['row_id']}", use_container_width=True, help="Delete this entry"):
+                    btn_unique_key = f"del_btn_{selected_node_id}_{idx}_{log.get('row_id', idx)}"
+                    if st.button("🗑️", key=btn_unique_key, use_container_width=True, help="Delete this entry"):
                         if active_gsheet_url:
                             delete_gsheet_log(active_gsheet_url, log["row_id"])
                         else:
-                            st.session_state.local_logs[selected_node_id].pop(log["row_id"])
+                            st.session_state.local_logs[selected_node_id].pop(idx)
                         st.success("Entry deleted!")
                         st.rerun()
             if not active_gsheet_url:

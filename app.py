@@ -344,6 +344,14 @@ I18N = {
         "alert_dispatched_success": "Advisory authorized with Health Master Key and dispatched to mobile units.",
         "xai_no_anom": "No active anomalies. Region operating within baseline parameters.",
         
+        # Presentation Demo Controls
+        "demo_ctrl_title": "🎬 Presentation Demo Controls",
+        "demo_gen_btn": "🎲 Generate Simulated Data",
+        "demo_reset_btn": "🗑️ Reset Data",
+        "demo_gen_help": "Populate all 5 surveillance nodes with rich realistic presentation logs & historical dispatches",
+        "demo_success": "✅ Simulated presentation data loaded across all 5 monitoring nodes!",
+        "demo_cleared": "All logbooks reset to empty baseline.",
+        
         # Tab 4 Privacy Audit Log
         "audit_title": "🔒 Privacy Assurance & Compliance Audit Log",
         "audit_desc": "Proves mathematically that no personal names, phone numbers, or exact coordinates leave the edge nodes.",
@@ -486,6 +494,14 @@ I18N = {
         "log_title": "ସୂଚନା ପ୍ରେରଣ ଲଗ୍",
         "alert_dispatched_success": "ଜରୁରୀକାଳୀନ ସୂଚନା ସଫଳତାର ସହ ପଠାଯାଇଛି।",
         "xai_no_anom": "ସମସ୍ତ ସୂଚକାଙ୍କ ସ୍ୱାଭାବିକ ସୀମା ମଧ୍ୟରେ ଅଛି।",
+        
+        # Presentation Demo Controls
+        "demo_ctrl_title": "🎬 ଉପସ୍ଥାପନା ଡେମୋ ତଥ୍ୟ (Demo Controls)",
+        "demo_gen_btn": "🎲 ସିମୁଲେସନ ତଥ୍ୟ ଲୋଡ୍ କରନ୍ତୁ",
+        "demo_reset_btn": "🗑️ ତଥ୍ୟ ରିସେଟ୍ କରନ୍ତୁ",
+        "demo_gen_help": "ଉପସ୍ଥାପନା ପାଇଁ ସମସ୍ତ ୫ଟି ନୋଡ୍‌ରେ ବାସ୍ତବିକ ତଥ୍ୟ ଏବଂ ଲଗ୍ ପ୍ରଦାନ କରନ୍ତୁ",
+        "demo_success": "✅ ସମସ୍ତ ୫ଟି ନୋଡ୍‌ରେ ଉପସ୍ଥାପନା ତଥ୍ୟ ସଫଳତାର ସହ ଲୋଡ୍ ହେଲା!",
+        "demo_cleared": "ସମସ୍ତ ଲଗ୍ ସଫା କରାଗଲା।",
         
         # Tab 4 Privacy Audit Log
         "audit_title": "🔒 ଗୋପନୀୟତା ଅଡିଟ୍ ଏବଂ ସୁରକ୍ଷା ଲେଜର",
@@ -630,6 +646,14 @@ I18N = {
         "alert_dispatched_success": "आपातकालीन चेतावनी सफलतापूर्वक प्रसारित कर दी गई है।",
         "xai_no_anom": "सभी संकेतक सामान्य स्तर पर काम कर रहे हैं।",
         
+        # Presentation Demo Controls
+        "demo_ctrl_title": "🎬 प्रस्तुति डेमो डेटा (Demo Controls)",
+        "demo_gen_btn": "🎲 सिमुलेशन डेटा उत्पन्न करें",
+        "demo_reset_btn": "🗑️ डेटा रीसेट करें",
+        "demo_gen_help": "प्रस्तुति के लिए सभी 5 नोड्स में वास्तविक सिमुलेशन डेटा और आपातकालीन लॉग लोड करें",
+        "demo_success": "✅ सभी 5 नोड्स में प्रस्तुति डेटा सफलतापूर्वक लोड किया गया!",
+        "demo_cleared": "सभी लॉग साफ़ कर दिए गए हैं।",
+        
         # Tab 4 Privacy Audit Log
         "audit_title": "🔒 गोपनीयता ऑडिट एवं अनुपालन बहीखाता",
         "audit_desc": "बिना किसी व्यक्तिगत पहचान डेटा (PII) को उजागर किए स्वतंत्र गणितीय बहीखाता।",
@@ -685,12 +709,73 @@ selected_lang = st.sidebar.selectbox(
 )
 t = I18N[selected_lang]
 
+# --- Default Presentation / Simulation Dataset Helpers ---
+def get_default_presentation_logs():
+    return {
+        "node_campus": [
+            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 14.0, "timestamp": "Today, 10:30 AM", "details": "Acute watery diarrhea & vomiting cluster post-mess dinner"},
+            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 6.0, "timestamp": "Today, 09:15 AM", "details": "Persistent dry cough, mild bronchospasm triage"},
+            {"symptom": "fever", "location": "Hostel 2", "raw_val": 9.0, "timestamp": "Yesterday, 04:20 PM", "details": "Fever, chills and joint pain screening"}
+        ],
+        "node_soa": [
+            {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 16.0, "timestamp": "Today, 11:45 AM", "details": "Severe abdominal cramps and dehydration triage"},
+            {"symptom": "respiratory", "location": "Hostel A", "raw_val": 5.0, "timestamp": "Today, 08:30 AM", "details": "Acute pharyngitis & cold symptoms"},
+            {"symptom": "fever", "location": "General Campus", "raw_val": 11.0, "timestamp": "Yesterday, 05:10 PM", "details": "Seasonal febrile illness screening"}
+        ],
+        "node_hospital": [
+            {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 28.0, "timestamp": "Today, 11:00 AM", "details": "Urban triage: acute diarrheal intake surge"},
+            {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 34.0, "timestamp": "Today, 09:45 AM", "details": "Influenza-like illness screening outpatient tally"},
+            {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 18.0, "timestamp": "Yesterday, 06:30 PM", "details": "High febrile cases admitted for observation"}
+        ],
+        "node_water": [
+            {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 8.4, "timestamp": "Today, 07:00 AM", "details": "Lab Coliform test: elevated bacterial index post-rainfall"},
+            {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 3.8, "timestamp": "Today, 07:30 AM", "details": "Turbidity sensor: elevated suspended solids (NTU)"},
+            {"symptom": "ph", "location": "Distribution Line North", "raw_val": 6.85, "timestamp": "Today, 08:00 AM", "details": "Continuous probe: pH level shifted to 6.85"}
+        ],
+        "node_weather": [
+            {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 32.8, "timestamp": "Today, 12:00 PM", "details": "Met sensor: elevated regional daytime ambient temp"},
+            {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 86.5, "timestamp": "Today, 12:00 PM", "details": "High relative humidity promoting vector transmission"},
+            {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 24.0, "timestamp": "Today, 06:00 AM", "details": "Convective rainfall tally (24mm) in past 12 hours"}
+        ]
+    }
+
+def get_default_presentation_notifications():
+    return [
+        {
+            "timestamp": "2026-08-24 18:30:00",
+            "status": "🔴 Waterborne Risk Cluster Confirmed",
+            "confidence": "95.0%",
+            "hash": "SHA256:7f8a9b2c3d4e5f60...",
+            "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
+        },
+        {
+            "timestamp": "2026-08-24 14:15:00",
+            "status": "🟡 Sentinel Respiratory Surge Advisory",
+            "confidence": "68.0%",
+            "hash": "SHA256:3a4b5c6d7e8f9012...",
+            "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
+        }
+    ]
+
 # --- Sidebar Controls (Simplified) ---
 st.sidebar.title(t["sidebar_title"])
 st.sidebar.markdown(t["sidebar_desc"])
 st.sidebar.markdown("---")
 st.sidebar.info(t["zero_central_policy"])
 
+# Sidebar Presentation Demo Controls
+st.sidebar.markdown(f"### {t['demo_ctrl_title']}")
+if st.sidebar.button(t["demo_gen_btn"], help=t["demo_gen_help"], use_container_width=True, type="primary"):
+    st.session_state.local_logs = get_default_presentation_logs()
+    st.session_state.notifications = get_default_presentation_notifications()
+    st.sidebar.success(t["demo_success"])
+    st.rerun()
+
+if st.sidebar.button(t["demo_reset_btn"], help=t["demo_cleared"], use_container_width=True):
+    st.session_state.local_logs = {"node_campus": [], "node_soa": [], "node_hospital": [], "node_water": [], "node_weather": []}
+    st.session_state.notifications = []
+    st.sidebar.info(t["demo_cleared"])
+    st.rerun()
 
 # --- Top Navigation / Main Header ---
 col_head1, col_head2 = st.columns([2.5, 1])
@@ -774,24 +859,13 @@ NODES = {
 
 # --- Initialize Session States ---
 if "notifications" not in st.session_state:
-    st.session_state.notifications = []
+    st.session_state.notifications = get_default_presentation_notifications()
 if "reg_emails" not in st.session_state:
     st.session_state.reg_emails = ["chief.epidemiologist@odisha.gov.in", "cuttack.health.officer@nic.in"]
 if "ivr_call_active" not in st.session_state:
     st.session_state.ivr_call_active = False
 if "local_logs" not in st.session_state:
-    st.session_state.local_logs = {
-        "node_campus": [
-            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 12.0, "timestamp": "Today, 10:30 AM", "details": "Stomach cramps, vomiting"},
-            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "Today, 09:15 AM", "details": "Dry cough"}
-        ],
-        "node_soa": [
-            {"symptom": "fever", "location": "Hostel B", "raw_val": 15.0, "timestamp": "Today, 11:45 AM", "details": "High fever, chills"}
-        ],
-        "node_hospital": [],
-        "node_water": [],
-        "node_weather": []
-    }
+    st.session_state.local_logs = get_default_presentation_logs()
 
 # Dynamic parameters in session state
 if "epsilon" not in st.session_state:

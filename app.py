@@ -345,9 +345,15 @@ I18N = {
         "xai_no_anom": "No active anomalies. Region operating within baseline parameters.",
         
         # Presentation Demo Controls
-        "demo_ctrl_title": "🎬 Presentation Demo Controls",
-        "demo_gen_btn": "🎲 Generate Simulated Data",
-        "demo_reset_btn": "🗑️ Reset Data",
+        "demo_ctrl_title": "🏆 Hackathon Presentation Suite",
+        "quick_scenario_label": "⚡ Instant Hackathon Scenario Launcher:",
+        "btn_waterborne": "🌊 1. Waterborne GI Outbreak",
+        "btn_resp": "🫁 2. Cold-Snap Respiratory",
+        "btn_typo": "⚠️ 3. False Alarm (Typo)",
+        "btn_privacy": "🔬 4. Privacy Guard (k-Anon)",
+        "btn_normal": "🟢 5. Normal Baseline",
+        "demo_gen_btn": "🎲 Regenerate Multi-Node Data",
+        "demo_reset_btn": "🗑️ Reset Logbooks",
         "demo_gen_help": "Populate all 5 surveillance nodes with rich realistic presentation logs & historical dispatches",
         "demo_success": "✅ Simulated presentation data loaded across all 5 monitoring nodes!",
         "demo_cleared": "All logbooks reset to empty baseline.",
@@ -496,7 +502,13 @@ I18N = {
         "xai_no_anom": "ସମସ୍ତ ସୂଚକାଙ୍କ ସ୍ୱାଭାବିକ ସୀମା ମଧ୍ୟରେ ଅଛି।",
         
         # Presentation Demo Controls
-        "demo_ctrl_title": "🎬 ଉପସ୍ଥାପନା ଡେମୋ ତଥ୍ୟ (Demo Controls)",
+        "demo_ctrl_title": "🏆 ହ୍ୟାକାଥନ୍ ଉପସ୍ଥାପନା ପ୍ୟାନେଲ୍",
+        "quick_scenario_label": "⚡ ତ୍ୱରିତ ସିନାରିଓ ଲଞ୍ଚର୍:",
+        "btn_waterborne": "🌊 ୧. ଜଳବାହିତ ମହାମାରୀ କ୍ଲଷ୍ଟର୍",
+        "btn_resp": "🫁 ୨. ଥଣ୍ଡା ଜନିତ ଶ୍ୱାସକ୍ରିୟା ସଂକ୍ରମଣ",
+        "btn_typo": "⚠️ ୩. ତଥ୍ୟ ଭୁଲ୍ (False Alarm)",
+        "btn_privacy": "🔬 ୪. ଗୋପନୀୟତା ସୁରକ୍ଷା (k-Anon)",
+        "btn_normal": "🟢 ୫. ସ୍ୱାଭାବିକ ସ୍ଥିତି",
         "demo_gen_btn": "🎲 ସିମୁଲେସନ ତଥ୍ୟ ଲୋଡ୍ କରନ୍ତୁ",
         "demo_reset_btn": "🗑️ ତଥ୍ୟ ରିସେଟ୍ କରନ୍ତୁ",
         "demo_gen_help": "ଉପସ୍ଥାପନା ପାଇଁ ସମସ୍ତ ୫ଟି ନୋଡ୍‌ରେ ବାସ୍ତବିକ ତଥ୍ୟ ଏବଂ ଲଗ୍ ପ୍ରଦାନ କରନ୍ତୁ",
@@ -647,7 +659,13 @@ I18N = {
         "xai_no_anom": "सभी संकेतक सामान्य स्तर पर काम कर रहे हैं।",
         
         # Presentation Demo Controls
-        "demo_ctrl_title": "🎬 प्रस्तुति डेमो डेटा (Demo Controls)",
+        "demo_ctrl_title": "🏆 हैकथॉन प्रस्तुति सूट",
+        "quick_scenario_label": "⚡ त्वरित परिदृश्य लांचर:",
+        "btn_waterborne": "🌊 1. जलजनित संक्रमण क्लस्टर",
+        "btn_resp": "🫁 2. श्वसन रोग प्रकोप",
+        "btn_typo": "⚠️ 3. गलत प्रविष्टि (False Alarm)",
+        "btn_privacy": "🔬 4. गोपनीयता सुरक्षा (k-Anon)",
+        "btn_normal": "🟢 5. सामान्य स्थिति",
         "demo_gen_btn": "🎲 सिमुलेशन डेटा उत्पन्न करें",
         "demo_reset_btn": "🗑️ डेटा रीसेट करें",
         "demo_gen_help": "प्रस्तुति के लिए सभी 5 नोड्स में वास्तविक सिमुलेशन डेटा और आपातकालीन लॉग लोड करें",
@@ -757,25 +775,210 @@ def get_default_presentation_notifications():
         }
     ]
 
+def generate_hackathon_scenario_data(scenario_type):
+    if scenario_type == "waterborne":
+        return {
+            "scenario": "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
+            "logs": {
+                "node_campus": [
+                    {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 42.0, "timestamp": "Today, 10:30 AM", "details": "Acute cluster: severe watery diarrhea & vomiting post-mess dinner"},
+                    {"symptom": "fever", "location": "Hostel 1", "raw_val": 14.0, "timestamp": "Today, 11:15 AM", "details": "Low grade fever with abdominal cramping"},
+                    {"symptom": "respiratory", "location": "Hostel 2", "raw_val": 4.0, "timestamp": "Yesterday, 04:20 PM", "details": "Standard baseline cough check"}
+                ],
+                "node_soa": [
+                    {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 48.0, "timestamp": "Today, 11:45 AM", "details": "Dehydration and acute gastrointestinal symptoms surge"},
+                    {"symptom": "fever", "location": "Hostel A", "raw_val": 16.0, "timestamp": "Today, 12:10 PM", "details": "Febrile dehydration cases admitted"},
+                    {"symptom": "respiratory", "location": "General Campus", "raw_val": 5.0, "timestamp": "Yesterday, 05:10 PM", "details": "Baseline respiratory log"}
+                ],
+                "node_hospital": [
+                    {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 78.0, "timestamp": "Today, 11:00 AM", "details": "Emergency triage: acute waterborne diarrheal outbreak surge"},
+                    {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 32.0, "timestamp": "Today, 01:30 PM", "details": "High febrile dehydration admissions"},
+                    {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 12.0, "timestamp": "Yesterday, 09:45 AM", "details": "Baseline ILI registration"}
+                ],
+                "node_water": [
+                    {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 15.6, "timestamp": "Today, 07:00 AM", "details": "CRITICAL: Coliform bacterial count (15.6 MPN) spiked after heavy rain run-off"},
+                    {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 6.4, "timestamp": "Today, 07:30 AM", "details": "High turbidity (6.4 NTU) detected in municipal distribution line"},
+                    {"symptom": "ph", "location": "Distribution Line North", "raw_val": 6.80, "timestamp": "Today, 08:00 AM", "details": "Water pH shifted to acidic 6.80"}
+                ],
+                "node_weather": [
+                    {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 45.0, "timestamp": "Today, 06:00 AM", "details": "Heavy monsoon precipitation (45mm) causing drainage overflow"},
+                    {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 33.2, "timestamp": "Today, 12:00 PM", "details": "High ambient temperature (33.2°C)"},
+                    {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 89.0, "timestamp": "Today, 12:00 PM", "details": "Relative humidity elevated at 89%"}
+                ]
+            },
+            "notifications": [
+                {
+                    "timestamp": "2026-08-24 18:30:00",
+                    "status": "🔴 Unusual Disease Cluster Confirmed (Waterborne)",
+                    "confidence": "99.0%",
+                    "hash": "SHA256:7f8a9b2c3d4e5f60...",
+                    "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
+                }
+            ]
+        }
+    elif scenario_type == "respiratory":
+        return {
+            "scenario": "🫁 Cold-Snap Acute Respiratory Surge",
+            "logs": {
+                "node_campus": [
+                    {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 48.0, "timestamp": "Today, 09:15 AM", "details": "Surge: acute bronchospasm, persistent dry cough & sore throat"},
+                    {"symptom": "fever", "location": "Hostel 2", "raw_val": 22.0, "timestamp": "Today, 10:00 AM", "details": "High fever with chills and myalgia"},
+                    {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 2.0, "timestamp": "Yesterday, 04:20 PM", "details": "Normal baseline GI check"}
+                ],
+                "node_soa": [
+                    {"symptom": "respiratory", "location": "Hostel A", "raw_val": 52.0, "timestamp": "Today, 08:30 AM", "details": "Cold-snap acute upper respiratory tract infections"},
+                    {"symptom": "fever", "location": "Hostel B", "raw_val": 26.0, "timestamp": "Today, 09:40 AM", "details": "Febrile flu-like symptom registrations"},
+                    {"symptom": "gastrointestinal", "location": "General Campus", "raw_val": 3.0, "timestamp": "Yesterday, 05:10 PM", "details": "Normal baseline GI log"}
+                ],
+                "node_hospital": [
+                    {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 98.0, "timestamp": "Today, 09:45 AM", "details": "Influenza-Like Illness (ILI) triage surge: 98 cases logged"},
+                    {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 44.0, "timestamp": "Today, 11:20 AM", "details": "High febrile respiratory complications triage"},
+                    {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 8.0, "timestamp": "Yesterday, 11:00 AM", "details": "Baseline diarrheal count"}
+                ],
+                "node_water": [
+                    {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 1.1, "timestamp": "Today, 07:00 AM", "details": "Water quality normal baseline"},
+                    {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 0.9, "timestamp": "Today, 07:30 AM", "details": "Turbidity clean baseline"},
+                    {"symptom": "ph", "location": "Distribution Line North", "raw_val": 7.20, "timestamp": "Today, 08:00 AM", "details": "pH balanced at 7.20"}
+                ],
+                "node_weather": [
+                    {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 16.5, "timestamp": "Today, 06:00 AM", "details": "Cold-snap alert: regional temperature dropped to 16.5°C"},
+                    {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 93.0, "timestamp": "Today, 06:00 AM", "details": "Relative humidity spiked to 93% with morning fog"},
+                    {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 0.0, "timestamp": "Today, 06:00 AM", "details": "Nil precipitation"}
+                ]
+            },
+            "notifications": [
+                {
+                    "timestamp": "2026-08-24 14:15:00",
+                    "status": "🔴 Unusual Disease Cluster Confirmed (Cold-Snap Respiratory)",
+                    "confidence": "99.0%",
+                    "hash": "SHA256:3a4b5c6d7e8f9012...",
+                    "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
+                }
+            ]
+        }
+    elif scenario_type == "typo":
+        return {
+            "scenario": "⚠️ False Alarm (Single-Source Data Typo)",
+            "logs": {
+                "node_campus": [
+                    {"symptom": "fever", "location": "Hostel 2", "raw_val": 142.0, "timestamp": "Today, 10:00 AM", "details": "DATA TYPO: Single clinic entry error (keyed 142 instead of 14)"},
+                    {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 3.0, "timestamp": "Today, 10:30 AM", "details": "Normal baseline check"},
+                    {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "Today, 09:15 AM", "details": "Normal baseline check"}
+                ],
+                "node_soa": [
+                    {"symptom": "fever", "location": "Hostel B", "raw_val": 8.0, "timestamp": "Today, 11:45 AM", "details": "Normal baseline fever log"},
+                    {"symptom": "gastrointestinal", "location": "Hostel A", "raw_val": 3.0, "timestamp": "Today, 08:30 AM", "details": "Normal baseline GI"},
+                    {"symptom": "respiratory", "location": "General Campus", "raw_val": 5.0, "timestamp": "Yesterday, 05:10 PM", "details": "Normal baseline"}
+                ],
+                "node_hospital": [
+                    {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 11.0, "timestamp": "Today, 11:00 AM", "details": "Normal triage baseline"},
+                    {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 14.0, "timestamp": "Today, 09:45 AM", "details": "Normal ILI baseline"},
+                    {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 22.0, "timestamp": "Yesterday, 06:30 PM", "details": "Standard OPD baseline"}
+                ],
+                "node_water": [
+                    {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 1.2, "timestamp": "Today, 07:00 AM", "details": "Normal baseline coliform"},
+                    {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 1.0, "timestamp": "Today, 07:30 AM", "details": "Normal turbidity"},
+                    {"symptom": "ph", "location": "Distribution Line North", "raw_val": 7.20, "timestamp": "Today, 08:00 AM", "details": "Normal pH"}
+                ],
+                "node_weather": [
+                    {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 28.5, "timestamp": "Today, 12:00 PM", "details": "Normal ambient temperature"},
+                    {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 75.0, "timestamp": "Today, 12:00 PM", "details": "Normal humidity"},
+                    {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 1.5, "timestamp": "Today, 06:00 AM", "details": "Normal baseline rainfall"}
+                ]
+            },
+            "notifications": []
+        }
+    elif scenario_type == "privacy":
+        return {
+            "scenario": "🔬 Small Cohort Threat (k-Anonymity Guard Demo)",
+            "logs": {
+                "node_campus": [
+                    {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 3.0, "timestamp": "Today, 10:30 AM", "details": "Small cohort (3 cases < k=5): Automatic edge suppression active"},
+                    {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "Today, 09:15 AM", "details": "Small cohort (4 cases < k=5): Suppressed"}
+                ],
+                "node_soa": [
+                    {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 2.0, "timestamp": "Today, 11:45 AM", "details": "Small cohort (2 cases < k=5): Suppressed"}
+                ],
+                "node_hospital": [],
+                "node_water": [
+                    {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 1.1, "timestamp": "Today, 07:00 AM", "details": "Continuous metric: LDP active"}
+                ],
+                "node_weather": [
+                    {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 28.2, "timestamp": "Today, 12:00 PM", "details": "Continuous metric: LDP active"}
+                ]
+            },
+            "notifications": []
+        }
+    else: # normal
+        return {
+            "scenario": "🟢 Normal Baseline (No Active Outbreaks)",
+            "logs": get_default_presentation_logs(),
+            "notifications": []
+        }
+
+# --- Initialize Scenario Session State ---
+if "current_scenario" not in st.session_state:
+    st.session_state.current_scenario = "🌊 Gastrointestinal Outbreak Cluster (Waterborne)"
+
 # --- Sidebar Controls (Simplified) ---
 st.sidebar.title(t["sidebar_title"])
 st.sidebar.markdown(t["sidebar_desc"])
 st.sidebar.markdown("---")
 st.sidebar.info(t["zero_central_policy"])
 
-# Sidebar Presentation Demo Controls
+# Sidebar Presentation Demo Suite
 st.sidebar.markdown(f"### {t['demo_ctrl_title']}")
-if st.sidebar.button(t["demo_gen_btn"], help=t["demo_gen_help"], use_container_width=True, type="primary"):
-    st.session_state.local_logs = get_default_presentation_logs()
-    st.session_state.notifications = get_default_presentation_notifications()
-    st.sidebar.success(t["demo_success"])
+st.sidebar.markdown(f"**{t['quick_scenario_label']}**")
+
+if st.sidebar.button(t["btn_waterborne"], use_container_width=True):
+    data_pack = generate_hackathon_scenario_data("waterborne")
+    st.session_state.current_scenario = data_pack["scenario"]
+    st.session_state.local_logs = data_pack["logs"]
+    st.session_state.notifications = data_pack["notifications"]
     st.rerun()
 
-if st.sidebar.button(t["demo_reset_btn"], help=t["demo_cleared"], use_container_width=True):
-    st.session_state.local_logs = {"node_campus": [], "node_soa": [], "node_hospital": [], "node_water": [], "node_weather": []}
-    st.session_state.notifications = []
-    st.sidebar.info(t["demo_cleared"])
+if st.sidebar.button(t["btn_resp"], use_container_width=True):
+    data_pack = generate_hackathon_scenario_data("respiratory")
+    st.session_state.current_scenario = data_pack["scenario"]
+    st.session_state.local_logs = data_pack["logs"]
+    st.session_state.notifications = data_pack["notifications"]
     st.rerun()
+
+if st.sidebar.button(t["btn_typo"], use_container_width=True):
+    data_pack = generate_hackathon_scenario_data("typo")
+    st.session_state.current_scenario = data_pack["scenario"]
+    st.session_state.local_logs = data_pack["logs"]
+    st.session_state.notifications = data_pack["notifications"]
+    st.rerun()
+
+if st.sidebar.button(t["btn_privacy"], use_container_width=True):
+    data_pack = generate_hackathon_scenario_data("privacy")
+    st.session_state.current_scenario = data_pack["scenario"]
+    st.session_state.local_logs = data_pack["logs"]
+    st.session_state.notifications = data_pack["notifications"]
+    st.rerun()
+
+if st.sidebar.button(t["btn_normal"], use_container_width=True):
+    data_pack = generate_hackathon_scenario_data("normal")
+    st.session_state.current_scenario = data_pack["scenario"]
+    st.session_state.local_logs = data_pack["logs"]
+    st.session_state.notifications = data_pack["notifications"]
+    st.rerun()
+
+st.sidebar.markdown("---")
+col_sim_btn1, col_sim_btn2 = st.sidebar.columns(2)
+with col_sim_btn1:
+    if st.button(t["demo_gen_btn"], help=t["demo_gen_help"], use_container_width=True, type="primary"):
+        st.session_state.local_logs = get_default_presentation_logs()
+        st.session_state.notifications = get_default_presentation_notifications()
+        st.sidebar.success(t["demo_success"])
+        st.rerun()
+with col_sim_btn2:
+    if st.button(t["demo_reset_btn"], help=t["demo_cleared"], use_container_width=True):
+        st.session_state.local_logs = {"node_campus": [], "node_soa": [], "node_hospital": [], "node_water": [], "node_weather": []}
+        st.session_state.notifications = []
+        st.sidebar.info(t["demo_cleared"])
+        st.rerun()
 
 # --- Top Navigation / Main Header ---
 col_head1, col_head2 = st.columns([2.5, 1])
@@ -790,18 +993,21 @@ with col_head1:
     )
 with col_head2:
     # Diagnostic scenario injection panel
-    st.markdown("<div style='margin-top: 15px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    scenario_list = [
+        "🟢 Normal Baseline (No Active Outbreaks)",
+        "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
+        "🫁 Cold-Snap Acute Respiratory Surge",
+        "⚠️ False Alarm (Single-Source Data Typo)",
+        "🔬 Small Cohort Threat (k-Anonymity Guard Demo)"
+    ]
+    cur_idx = scenario_list.index(st.session_state.current_scenario) if st.session_state.current_scenario in scenario_list else 1
     scenario = st.selectbox(
         t["inject_outbreak"],
-        [
-            "🟢 Normal Baseline (No Active Outbreaks)",
-            "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
-            "🫁 Cold-Snap Acute Respiratory Surge",
-            "⚠️ False Alarm (Single-Source Data Typo)",
-            "🔬 Small Cohort Threat (k-Anonymity Guard Demo)"
-        ]
+        scenario_list,
+        index=cur_idx
     )
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.session_state.current_scenario = scenario
 
 # --- Node Parameter Schema ---
 NODES = {
@@ -1781,7 +1987,7 @@ with tab_clinic:
                         """, unsafe_allow_html=True
                     )
                 with col_l3:
-                    st.markdown("<div style='padding-top: 18px;'>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
                     btn_unique_key = f"del_btn_{selected_node_id}_{idx}_{log.get('row_id', idx)}"
                     if st.button("🗑️", key=btn_unique_key, use_container_width=True, help="Delete this entry"):
                         if active_gsheet_url:

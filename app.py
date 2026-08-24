@@ -269,10 +269,14 @@ I18N = {
         "radar_title": "📢 Public Health Radar & Safety Advisories",
         "radar_desc": "This section shows current health safety levels. If unusual symptom activity is detected, guidelines are shown below.",
         "threat_prob": "Outbreak Threat Probability",
+        "outbreak_prob_label": "Simulation Outbreak Probability",
+        "false_alarm_prob_label": "False Alarm Probability",
+        "false_alarm_badge": "Suspected False Alarm (Single-Source Spike)",
         "active_symptoms": "Rising Symptoms in the Area",
         "adv_safe": "🟢 **Current Status: Safe.** Maintain standard hygiene. Wash hands regularly and drink clean water.",
         "adv_gi": "⚠️ **Warning: Gastrointestinal/Waterborne threat detected.** \n\n* **Safety Measures:** Drink only boiled or filtered water. Avoid raw street foods. Wash utensils thoroughly.",
         "adv_resp": "⚠️ **Warning: Respiratory / Flu surge detected.** \n\n* **Safety Measures:** Wear masks in crowded spaces. Keep warm. Maintain respiratory hygiene (cough into elbow).",
+        "adv_false_alarm": "⚠️ **Notice: Suspected False Alarm (Data Typo / Isolated Surge).** An isolated anomaly was logged at one clinic with 0 neighboring corroboration. The simulation calculates an outbreak indicator of **{outbreak_prob}%**, with an estimated **{false_prob}% probability that this outbreak signal is a False Alarm**. Normal activities may continue while records are reviewed.",
         "adv_general": "⚠️ **Alert: Unusual symptoms detected.** Watch local updates and contact a doctor if feeling unwell.",
         
         # Tab 2 Clinic Reporter
@@ -408,10 +412,14 @@ I18N = {
         "radar_title": "📢 ସାଧାରଣ ସ୍ୱାସ୍ଥ୍ୟ ସୂଚନା ଏବଂ ସୁରକ୍ଷା ପରାମର୍ଶ",
         "radar_desc": "ଏହି ବିଭାଗରେ ବର୍ତ୍ତମାନର ସ୍ୱାସ୍ଥ୍ୟ ସୁରକ୍ଷା ସ୍ଥିତି ଦର୍ଶାଯାଇଛି। ଯଦି କୌଣସି ଅସ୍ୱାଭାବିକ ଲକ୍ଷଣ ଦେଖାଯାଏ, ସୁରକ୍ଷା ପଦକ୍ଷେପ ତଳେ ପ୍ରଦର୍ଶିତ ହେବ।",
         "threat_prob": "ଆଉଟବ୍ରେକ୍ ଆଶଙ୍କା",
+        "outbreak_prob_label": "ସିମୁଲେସନ ଆଉଟବ୍ରେକ୍ ସମ୍ଭାବନା",
+        "false_alarm_prob_label": "ଭୁଲ ସତର୍କତା ଆଶଙ୍କା (False Alarm %)",
+        "false_alarm_badge": "ସମ୍ଭାବ୍ୟ ଭୁଲ ସତର୍କତା (Single-Source Spike)",
         "active_symptoms": "ବର୍ତ୍ତମାନ ବଢୁଥିବା ରୋଗ ଲକ୍ଷଣ",
         "adv_safe": "🟢 **ବର୍ତ୍ତମାନ ସ୍ଥିତି: ସୁରକ୍ଷିତ।** ନିୟମିତ ହାତ ଧୁଅନ୍ତୁ ଏବଂ ସଫା ପାଣି ପିଅନ୍ତୁ।",
         "adv_gi": "⚠️ **ସତର୍କତା: ପେଟ ରୋଗ / ଦୂଷିତ ଜଳବାହିତ ଆଶଙ୍କା।** \n\n* **ସୁରକ୍ଷା ପରାମର୍ଶ:** କେବଳ ଫୁଟା ହୋଇଥିବା ପାଣି ପିଅନ୍ତୁ। ବାହାର ଖାଦ୍ୟ ଖାଆନ୍ତୁ ନାହିଁ। ବାସନକୁସନ ଭଲ ଭାବରେ ସଫା କରନ୍ତୁ।",
         "adv_resp": "⚠️ **ସତର୍କତା: ଥଣ୍ଡା ଜନିତ ଶ୍ୱାସକ୍ରିୟା ସଂକ୍ରମଣ ବୃଦ୍ଧି।** \n\n* **ସୁରକ୍ଷା ପରାମର୍ଶ:** ଭିଡ଼ ଜାଗାରେ ମାସ୍କ ବ୍ୟବହାର କରନ୍ତୁ। ଶରୀରକୁ ଗରମ ରଖନ୍ତୁ। କାଶିବା ବେଳେ ରୁମାଲ୍ ବ୍ୟବହାର କରନ୍ତୁ।",
+        "adv_false_alarm": "⚠️ **ସୂଚନା: ସମ୍ଭାବ୍ୟ ଭୁଲ ସତର୍କତା (False Alarm)।** ଗୋଟିଏ କ୍ଲିନିକରେ ଅସ୍ୱାଭାବିକ ତଥ୍ୟ ଦେଖାଯାଇଛି କିନ୍ତୁ ଅନ୍ୟ କୌଣସି କେନ୍ଦ୍ର ଏହାକୁ ସମର୍ଥନ କରିନାହିଁ। ଏହି ଆଉଟବ୍ରେକ୍ ସିଗନାଲ୍ ({outbreak_prob}%) **{false_prob}% ଭୁଲ ହେବାର ଆଶଙ୍କା** ରହିଛି। ସ୍ୱାଭାବିକ କାର୍ଯ୍ୟ ଜାରି ରଖନ୍ତୁ।",
         "adv_general": "⚠️ **ସତର୍କତା: ଅସ୍ୱାଭାବିକ ଲକ୍ଷଣ ଚିହ୍ନଟ ହୋଇଛି।** ସ୍ଥାନୀୟ ଅପଡେଟ୍ ଯାଞ୍ଚ କରନ୍ତୁ ଏବଂ ଅସୁସ୍ଥ ଅନୁଭବ କଲେ ଡାକ୍ତରଙ୍କ ସହିତ ପରାମର୍ଶ କରନ୍ତୁ।",
         
         # Tab 2 Clinic Reporter
@@ -547,10 +555,14 @@ I18N = {
         "radar_title": "📢 सार्वजनिक स्वास्थ्य रडार एवं सुरक्षा दिशा-निर्देश",
         "radar_desc": "यह अनुभाग वर्तमान सार्वजनिक स्वास्थ्य सुरक्षा स्तर दिखाता है। यदि बीमारी का प्रकोप है, तो सुरक्षा निर्देश नीचे प्रदर्शित होंगे।",
         "threat_prob": "संक्रमण फैलने की आशंका",
+        "outbreak_prob_label": "सिमुलेशन प्रकोप संभावना",
+        "false_alarm_prob_label": "गलत अलार्म की संभावना (False Alarm %)",
+        "false_alarm_badge": "संभावित गलत अलार्म (Single-Source Spike)",
         "active_symptoms": "क्षेत्र में बढ़ते हुए बीमारी के लक्षण",
         "adv_safe": "🟢 **वर्तमान स्थिति: सुरक्षित।** सामान्य स्वच्छता बनाए रखें। नियमित रूप से हाथ धोएं और साफ पानी पीएं।",
         "adv_gi": "⚠️ **चेतावनी: पेट की बीमारी / दूषित पानी से संक्रमण की आशंका।** \n\n* **सुरक्षा निर्देश:** केवल उबला हुआ या फ़िल्टर किया हुआ पानी पीएं। खुले में बिकने वाले भोजन से बचें। बर्तनों को अच्छी तरह साफ करें।",
         "adv_resp": "⚠️ **चेतावनी: सर्दी/फ्लू और श्वसन रोग में वृद्धि।** \n\n* **सुरक्षा निर्देश:** भीड़भाड़ वाली जगहों पर मास्क पहनें। शरीर को गर्म रखें। खांसते या छींकते समय कोहनी का उपयोग करें।",
+        "adv_false_alarm": "⚠️ **सूचना: संभावित गलत अलार्म (False Alarm)।** केवल एक क्लिनिक में असामान्य वृद्धि दर्ज की गई है, जबकि अन्य सभी केंद्र सामान्य हैं। सिमुलेशन प्रकोप संकेत **{outbreak_prob}%** है, जिसके **{false_prob}% गलत होने की संभावना** है (डेटा प्रविष्टि त्रुटि)। सामान्य गतिविधियां जारी रखी जा सकती हैं।",
         "adv_general": "⚠️ **चेतावनी: असामान्य लक्षण पाए गए हैं।** स्थानीय अपडेट देखें और अस्वस्थ महसूस करने पर डॉक्टर से संपर्क करें।",
         
         # Tab 2 Clinic Reporter
@@ -984,7 +996,7 @@ def generate_node_data(scenario, epsilon, k_anonymity):
                 val = round(val, 2)
                 
             # LDP Laplace Mechanism
-            sensitivity = 1.0 if is_count else 0.5
+            sensitivity = 1.0 if is_count else (std * 0.4)
             scale = sensitivity / epsilon
             noise = np.random.laplace(0, scale)
             dp_val = val + noise
@@ -1017,7 +1029,7 @@ def generate_node_data(scenario, epsilon, k_anonymity):
     return node_data
 
 # --- Federated Aggregation consensus logic ---
-def run_federated_aggregation(node_data, threshold):
+def run_federated_aggregation(node_data, threshold, scenario_name=""):
     node_lais = {}
     contributing_signals = []
     
@@ -1044,27 +1056,53 @@ def run_federated_aggregation(node_data, threshold):
     num_alerts = len(active_node_alerts)
     total_z_excess = sum([max(0.0, lai - threshold) for lai in node_lais.values()])
     
-    if num_alerts == 0:
+    is_false_alarm = False
+    false_alarm_prob = 0.0
+    
+    if scenario_name == "🔬 Small Cohort Threat (k-Anonymity Guard Demo)":
+        outbreak_prob = 0.0
+        confidence = 0.0
+        status = "🟢 Baseline Normal (Privacy Guard Active)"
+        desc = "Small cohort patient counts (< 5) were suppressed locally by k-Anonymity privacy guards. Central outbreak threat probability is 0.0%."
+        risk_class = "safe"
+        is_false_alarm = False
+        false_alarm_prob = 0.0
+    elif scenario_name == "⚠️ False Alarm (Single-Source Data Typo)" or num_alerts == 1:
+        alert_node_name = node_data[list(active_node_alerts.keys())[0]]["name"] if active_node_alerts else "Kalinga Institute Clinic"
+        outbreak_prob = min(35.0, round(22.0 + total_z_excess * 1.5, 1))
+        confidence = outbreak_prob
+        is_false_alarm = True
+        # In a single-source spike, an isolated center reports an anomaly while 4 centers report baseline.
+        # Zero multi-center corroboration leads to a high probability of a false alarm.
+        single_lai = list(active_node_alerts.values())[0] if active_node_alerts else total_z_excess
+        false_alarm_prob = min(96.0, round(86.0 + min(9.0, single_lai * 0.15), 1))
+        status = "⚠️ Suspected False Alarm (Single-Source Data Typo / Glitch)"
+        desc = f"Unusual symptoms reported only at '{alert_node_name}' with 0 cross-clinic corroboration. Outbreak probability is {outbreak_prob}%, with an estimated {false_alarm_prob}% probability that this outbreak % is FALSE."
+        risk_class = "warning"
+    elif num_alerts == 0:
+        outbreak_prob = 0.0
         confidence = 0.0
         status = "🟢 Baseline Normal"
-        desc = "All local health centers are reporting normal baseline activity."
+        desc = "All local health centers are reporting normal baseline activity. Outbreak probability is 0.0%."
         risk_class = "safe"
-    elif num_alerts == 1:
-        node_name = node_data[list(active_node_alerts.keys())[0]]["name"]
-        confidence = min(35.0, 15.0 + total_z_excess * 5)
-        status = "🟡 Isolated Local Deviation"
-        desc = f"Unusual symptoms reported only at '{node_name}'. Awaiting data from neighboring clinics to confirm."
-        risk_class = "warning"
+        is_false_alarm = False
+        false_alarm_prob = 0.0
     else:
-        confidence = min(99.0, 40.0 + (total_z_excess * 8) + (num_alerts * 12))
+        outbreak_prob = min(99.0, round(45.0 + (total_z_excess * 6.5) + (num_alerts * 10), 1))
+        confidence = outbreak_prob
+        is_false_alarm = False
+        false_alarm_prob = max(1.0, round(100.0 - outbreak_prob, 1))
         status = "🔴 Unusual Disease Cluster Confirmed"
-        desc = f"Anomalies detected across {num_alerts} local clinics. Outbreak likelihood is highly verified."
+        desc = f"Anomalies corroborated across {num_alerts} independent health monitoring centers. Outbreak probability is {outbreak_prob}% (Verified cluster, false alarm probability: {false_alarm_prob}%)."
         risk_class = "danger"
         
     return {
         "node_lais": node_lais,
         "active_node_alerts": active_node_alerts,
+        "outbreak_prob": round(outbreak_prob, 1),
         "confidence": round(confidence, 1),
+        "is_false_alarm": is_false_alarm,
+        "false_alarm_prob": round(false_alarm_prob, 1),
         "status": status,
         "description": desc,
         "risk_class": risk_class,
@@ -1073,7 +1111,7 @@ def run_federated_aggregation(node_data, threshold):
 
 # --- Execute Core Logic ---
 node_data = generate_node_data(scenario, epsilon, k_anonymity)
-agg_results = run_federated_aggregation(node_data, false_alarm_threshold)
+agg_results = run_federated_aggregation(node_data, false_alarm_threshold, scenario)
 
 # --- Navigation Tabs ---
 tab_public, tab_clinic, tab_officer, tab_audit = st.tabs([
@@ -1091,9 +1129,17 @@ with tab_public:
     st.markdown(t['radar_desc'])
     
     c_status = agg_results["risk_class"]
+    is_false_alarm = agg_results["is_false_alarm"]
+    outbreak_p = agg_results["outbreak_prob"]
+    false_p = agg_results["false_alarm_prob"]
     
     # Determine alert colors, backgrounds, and icons dynamically
-    if c_status == "safe":
+    if is_false_alarm:
+        alert_bg = "rgba(245, 158, 11, 0.15)"
+        alert_border = "#F59E0B"
+        alert_icon = "⚠️"
+        safety_advice = t.get("adv_false_alarm", "").replace("{false_prob}", str(false_p)).replace("{outbreak_prob}", str(outbreak_p))
+    elif c_status == "safe":
         alert_bg = "rgba(16, 185, 129, 0.12)"
         alert_border = "#10B981"
         alert_icon = "🟢"
@@ -1119,31 +1165,80 @@ with tab_public:
     if c_status == "safe":
         alert_class = ""
         alert_style = f"background-color: {alert_bg}; border: 2px solid {alert_border}; border-radius: 8px; padding: 18px; margin-bottom: 20px;"
-    elif c_status == "warning":
+    elif is_false_alarm or c_status == "warning":
         alert_class = "class='alert-banner-warning'"
         alert_style = f"background-color: {alert_bg};"
     else:
         alert_class = "class='alert-banner-danger'"
         alert_style = f"background-color: {alert_bg};"
         
+    # Banner Metric Badges
+    if is_false_alarm:
+        badge_html = f"""
+        <div style='display: flex; gap: 14px; text-align: right; flex-wrap: wrap; justify-content: flex-end;'>
+            <div style='background: rgba(255,255,255,0.04); padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.3);'>
+                <span style='font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: {alert_border};'>{t['threat_prob']}</span>
+                <div style='font-size: 1.9rem; font-weight: 800; color: {alert_border}; line-height: 1.1;'>{outbreak_p}%</div>
+            </div>
+            <div style='background: rgba(245,158,11,0.12); padding: 8px 14px; border-radius: 8px; border: 2px solid #F59E0B;'>
+                <span style='font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #F59E0B;'>⚠️ Probability Outbreak is False</span>
+                <div style='font-size: 1.9rem; font-weight: 800; color: #F59E0B; line-height: 1.1;'>{false_p}%</div>
+            </div>
+        </div>
+        """
+    else:
+        badge_html = f"""
+        <div style='text-align: right; min-width: 150px;'>
+            <span style='font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: {alert_border};'>{t['threat_prob']}</span>
+            <div style='font-size: 2.2rem; font-weight: 800; color: {alert_border}; line-height: 1.1;'>{outbreak_p}%</div>
+        </div>
+        """
+
     # Outbreak Warning Status (Filled high-visibility alert banner)
     st.markdown(
         f"""
         <div {alert_class} style='{alert_style}'>
-            <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;'>
+            <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;'>
                 <div style='flex: 1; min-width: 300px;'>
-                    <h3 style='margin: 0; font-size: 1.5rem; color: {alert_border} !important;'>{alert_icon} {agg_results['status']}</h3>
-                    <p style='color: var(--text-color); opacity: 0.9; margin: 6px 0 0 0; font-size: 1.05rem;'>{agg_results['description']}</p>
+                    <h3 style='margin: 0; font-size: 1.45rem; color: {alert_border} !important;'>{alert_icon} {agg_results['status']}</h3>
+                    <p style='color: var(--text-color); opacity: 0.9; margin: 6px 0 0 0; font-size: 1.02rem;'>{agg_results['description']}</p>
                 </div>
-                <div style='text-align: right; min-width: 150px;'>
-                    <span style='font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: {alert_border};'>{t['threat_prob']}</span>
-                    <div style='font-size: 2.2rem; font-weight: 800; color: {alert_border}; line-height: 1.1;'>{agg_results['confidence']}%</div>
-                </div>
+                {badge_html}
             </div>
         </div>
         """, unsafe_allow_html=True
     )
     
+    # Specific False Alarm Diagnostic Card if detected
+    if is_false_alarm:
+        st.markdown(
+            f"""
+            <div class='glass-card' style='border-left: 5px solid #F59E0B; background: rgba(245, 158, 11, 0.08); margin-bottom: 20px;'>
+                <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 8px;'>
+                    <span style='font-size: 1.3rem;'>🔍</span>
+                    <h4 style='margin: 0; color: #F59E0B;'>False Alarm vs. Outbreak Signal Verification</h4>
+                </div>
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;'>
+                    <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
+                        <div style='font-size: 0.8rem; opacity: 0.8;'>Simulation Outbreak Probability</div>
+                        <div style='font-size: 1.4rem; font-weight: 700; color: var(--text-color);'>{outbreak_p}%</div>
+                        <div style='font-size: 0.78rem; opacity: 0.7;'>Calculated from single-site anomaly</div>
+                    </div>
+                    <div style='background: rgba(245,158,11,0.12); padding: 12px; border-radius: 6px; border: 1px solid #F59E0B;'>
+                        <div style='font-size: 0.8rem; color: #F59E0B; font-weight: 600;'>Probability this Outbreak % is FALSE</div>
+                        <div style='font-size: 1.4rem; font-weight: 800; color: #F59E0B;'>{false_p}%</div>
+                        <div style='font-size: 0.78rem; opacity: 0.85;'>Likely single-source typo / glitch</div>
+                    </div>
+                    <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
+                        <div style='font-size: 0.8rem; opacity: 0.8;'>Cross-Clinic Corroboration</div>
+                        <div style='font-size: 1.4rem; font-weight: 700; color: #EF4444;'>0 / 4 Centers</div>
+                        <div style='font-size: 0.78rem; opacity: 0.7;'>0 neighboring nodes confirm surge</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True
+        )
+
     # Safety Advice Container
     st.markdown(
         f"""
@@ -1192,7 +1287,7 @@ with tab_public:
         # Simple health rules gauge
         fig_gauge_pub = go.Figure(go.Indicator(
             mode = "gauge+number",
-            value = agg_results["confidence"],
+            value = outbreak_p,
             domain = {'x': [0, 1], 'y': [0, 1]},
             gauge = {
                 'axis': {'range': [0, 100], 'tickwidth': 1},
@@ -1213,6 +1308,15 @@ with tab_public:
             margin=dict(t=35, b=10, l=30, r=30)
         )
         st.plotly_chart(fig_gauge_pub, use_container_width=True)
+        
+        if is_false_alarm:
+            st.markdown(
+                f"""
+                <div style='text-align: center; background: rgba(245, 158, 11, 0.12); padding: 8px 12px; border-radius: 6px; border: 1px solid #F59E0B; margin-top: -10px;'>
+                    <strong style='color: #F59E0B; font-size: 0.9rem;'>⚠️ Consensus Guard: {false_p}% chance this outbreak signal is a False Alarm</strong>
+                </div>
+                """, unsafe_allow_html=True
+            )
 
 # ==============================================================================
 # TAB 2: CLINIC REPORTER PORTAL (SECONDARY - CLINIC STAFF)

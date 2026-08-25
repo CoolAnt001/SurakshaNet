@@ -1142,34 +1142,62 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         risk_class = "safe"
         is_false_alarm = False
         false_alarm_prob = 0.0
-    elif scenario_name == "⚠️ False Alarm (Single-Source Data Typo)" or num_alerts == 1:
+    elif scenario_name == "⚠️ False Alarm (Single-Source Data Typo)" or (num_alerts == 1 and "node_water" not in active_node_alerts and "node_weather" not in active_node_alerts):
         alert_node_name = node_data[list(active_node_alerts.keys())[0]]["name"] if active_node_alerts else "Kalinga Institute Clinic"
-        outbreak_prob = min(35.0, round(22.0 + total_z_excess * 1.5, 1))
+        outbreak_prob = min(35.0, round(24.5 + total_z_excess * 1.2, 1))
         confidence = outbreak_prob
         is_false_alarm = True
-        # In a single-source spike, an isolated center reports an anomaly while 4 centers report baseline.
-        # Zero multi-center corroboration leads to a high probability of a false alarm.
         single_lai = list(active_node_alerts.values())[0] if active_node_alerts else total_z_excess
-        false_alarm_prob = min(96.0, round(86.0 + min(9.0, single_lai * 0.15), 1))
-        status = "Suspected False Alarm (Single-Source Data Typo / Glitch)"
-        desc = f"Unusual symptoms reported only at '{alert_node_name}' with 0 cross-clinic corroboration. Outbreak probability is {outbreak_prob}%, with an estimated {false_alarm_prob}% probability that this outbreak % is FALSE."
+        false_alarm_prob = min(96.0, round(88.0 + min(8.0, single_lai * 0.15), 1))
+        status = "Suspected False Alarm (Isolated Single-Source Spike)"
+        desc = f"Unusual symptoms reported only at '{alert_node_name}' with 0 neighboring clinic corroboration and clean environmental baselines. Outbreak probability is {outbreak_prob}%, with an estimated {false_alarm_prob}% probability that this outbreak signal is a False Alarm."
         risk_class = "warning"
     elif num_alerts == 0:
         outbreak_prob = 0.0
         confidence = 0.0
-        status = "Baseline Normal"
-        desc = "All local health centers are reporting normal baseline activity. Outbreak probability is 0.0%."
+        status = "Baseline Normal (All Systems Safe)"
+        desc = "All local health centers, municipal wastewater monitors, and weather stations are reporting normal baseline activity. Outbreak probability is 0.0%."
         risk_class = "safe"
         is_false_alarm = False
         false_alarm_prob = 0.0
+    elif scenario_name == "🌊 Gastrointestinal Outbreak Cluster (Waterborne)":
+        outbreak_prob = min(98.0, round(95.0 + min(3.0, total_z_excess * 0.1), 1))
+        confidence = outbreak_prob
+        is_false_alarm = False
+        false_alarm_prob = round(100.0 - outbreak_prob, 1)
+        status = "Waterborne Gastrointestinal Outbreak Cluster Confirmed"
+        desc = f"Corroborated waterborne outbreak: Elevated gastrointestinal and diarrheal cases across {num_alerts} clinics confirmed by municipal wastewater coliform surge and heavy rainfall."
+        risk_class = "danger"
+    elif scenario_name == "🫁 Cold-Snap Acute Respiratory Surge":
+        outbreak_prob = min(88.0, round(82.0 + min(6.0, total_z_excess * 0.2), 1))
+        confidence = outbreak_prob
+        is_false_alarm = False
+        false_alarm_prob = round(100.0 - outbreak_prob, 1)
+        status = "Sentinel Respiratory & Influenza Surge Advisory"
+        desc = f"Seasonal respiratory surge: Upper respiratory infections and ILI triage spikes across {num_alerts} centers corroborated by regional cold snap (16.5°C) and high humidity (93%)."
+        risk_class = "warning"
     else:
-        outbreak_prob = min(99.0, round(45.0 + (total_z_excess * 6.5) + (num_alerts * 10), 1))
+        # Dynamic Detection for custom/mixed cases
+        is_gi = any("gastro" in str(s["metric_label"]).lower() or "diarrh" in str(s["metric_label"]).lower() or "coliform" in str(s["metric_label"]).lower() for s in contributing_signals)
+        is_resp = any("respir" in str(s["metric_label"]).lower() or "cough" in str(s["metric_label"]).lower() or "ili" in str(s["metric_label"]).lower() for s in contributing_signals)
+        if is_gi:
+            outbreak_prob = min(98.0, round(85.0 + total_z_excess * 1.5, 1))
+            status = "Waterborne Gastrointestinal Cluster Detected"
+            desc = f"Corroborated waterborne anomaly: Diarrheal & gastrointestinal metrics elevated across {num_alerts} monitoring nodes."
+            risk_class = "danger"
+        elif is_resp:
+            outbreak_prob = min(90.0, round(78.0 + total_z_excess * 1.2, 1))
+            status = "Respiratory & Influenza Surge Detected"
+            desc = f"Corroborated respiratory anomaly: Respiratory triage metrics elevated across {num_alerts} monitoring nodes."
+            risk_class = "warning"
+        else:
+            outbreak_prob = min(95.0, round(60.0 + total_z_excess * 2.0, 1))
+            status = "Unusual Multi-Center Health Cluster"
+            desc = f"Anomalies corroborated across {num_alerts} independent health monitoring centers. Outbreak probability is {outbreak_prob}%."
+            risk_class = "danger"
         confidence = outbreak_prob
         is_false_alarm = False
         false_alarm_prob = max(1.0, round(100.0 - outbreak_prob, 1))
-        status = "Unusual Disease Cluster Confirmed"
-        desc = f"Anomalies corroborated across {num_alerts} independent health monitoring centers. Outbreak probability is {outbreak_prob}% (Verified cluster, false alarm probability: {false_alarm_prob}%)."
-        risk_class = "danger"
         
     return {
         "node_lais": node_lais,
@@ -1219,16 +1247,17 @@ with tab_public:
         alert_border = "#10B981"
         alert_icon = "🟢"
         safety_advice = t["adv_safe"]
-    elif c_status == "warning":
-        alert_bg = "rgba(245, 158, 11, 0.15)"
-        alert_border = "#F59E0B"
-        alert_icon = "⚠️"
-        safety_advice = t["adv_general"]
     else:
-        alert_bg = "rgba(239, 68, 68, 0.18)"
-        alert_border = "#EF4444"
-        alert_icon = "🚨"
-        # Determine advice based on scenario
+        if c_status == "warning":
+            alert_bg = "rgba(245, 158, 11, 0.15)"
+            alert_border = "#F59E0B"
+            alert_icon = "🟡"
+        else:
+            alert_bg = "rgba(239, 68, 68, 0.18)"
+            alert_border = "#EF4444"
+            alert_icon = "🚨"
+            
+        # Determine advice based on scenario and symptoms
         if "Gastrointestinal" in scenario or "Water" in scenario or any("gastro" in str(s["metric_label"]).lower() or "diarrh" in str(s["metric_label"]).lower() for s in agg_results["contributing_signals"]):
             safety_advice = t["adv_gi"]
         elif "Respiratory" in scenario or "Cold" in scenario or any("respir" in str(s["metric_label"]).lower() or "cough" in str(s["metric_label"]).lower() or "ili" in str(s["metric_label"]).lower() for s in agg_results["contributing_signals"]):

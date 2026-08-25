@@ -740,7 +740,7 @@ st.sidebar.markdown("---")
 st.sidebar.info(t["zero_central_policy"])
 
 # --- Top Navigation / Main Header ---
-col_head1, col_head2 = st.columns([2.5, 1])
+col_head1, col_head2 = st.columns([2, 1.1])
 with col_head1:
     st.markdown(
         f"""
@@ -753,8 +753,6 @@ with col_head1:
 with col_head2:
     # Diagnostic scenario injection panel
     st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-    if "current_scenario" not in st.session_state:
-        st.session_state.current_scenario = "🟢 Normal Baseline (No Active Outbreaks)"
     scenario_list = [
         "🟢 Normal Baseline (No Active Outbreaks)",
         "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
@@ -762,11 +760,13 @@ with col_head2:
         "⚠️ False Alarm (Single-Source Data Typo)",
         "🔬 Small Cohort Threat (k-Anonymity Guard Demo)"
     ]
-    cur_idx = scenario_list.index(st.session_state.current_scenario) if st.session_state.current_scenario in scenario_list else 0
+    if "sim_scenario_choice" not in st.session_state or st.session_state.sim_scenario_choice not in scenario_list:
+        st.session_state.sim_scenario_choice = scenario_list[0]
+    
     scenario = st.selectbox(
         t["inject_outbreak"],
         scenario_list,
-        index=cur_idx
+        key="sim_scenario_choice"
     )
     st.session_state.current_scenario = scenario
 
@@ -937,6 +937,40 @@ def delete_gsheet_log(url, row_id):
             pass
     threading.Thread(target=_send, daemon=True).start()
 
+def seed_gsheet_preset(url):
+    if not url:
+        return
+    diverse_dataset = [
+        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 7.0, "timestamp": "Today, 10:30 AM", "details": "Watery stool & nausea reported after mess dinner"},
+        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "Today, 09:15 AM", "details": "Mild seasonal rhinovirus / cough symptoms"},
+        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "fever", "location": "Hostel 4", "raw_val": 3.0, "timestamp": "Yesterday, 04:20 PM", "details": "Low-grade evening fever & headache screening"},
+        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 5.0, "timestamp": "Today, 11:45 AM", "details": "Abdominal discomfort & mild cramps triage"},
+        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "respiratory", "location": "Hostel C", "raw_val": 6.0, "timestamp": "Today, 08:30 AM", "details": "Dry cough & throat irritation triage"},
+        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "fever", "location": "Main Campus", "raw_val": 4.0, "timestamp": "Yesterday, 05:10 PM", "details": "Mild seasonal febrile illness checkup"},
+        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 14.0, "timestamp": "Today, 11:00 AM", "details": "Urban outpatient diarrheal intake tally"},
+        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "ili", "location": "Outpatient Ward 3", "raw_val": 18.0, "timestamp": "Today, 09:45 AM", "details": "Seasonal viral influenza outpatient triage"},
+        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "fever_high", "location": "Emergency Block", "raw_val": 8.0, "timestamp": "Yesterday, 06:30 PM", "details": "Acute febrile patients admitted for observation"},
+        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 2.4, "timestamp": "Today, 07:00 AM", "details": "Lab coliform test: minor post-rain elevation"},
+        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 1.8, "timestamp": "Today, 07:30 AM", "details": "Optical turbidity reading within standard safety threshold"},
+        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "ph", "location": "Distribution Line North", "raw_val": 7.15, "timestamp": "Today, 08:00 AM", "details": "Continuous probe: stable neutral pH recorded"},
+        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 31.4, "timestamp": "Today, 12:00 PM", "details": "Regional afternoon surface temperature"},
+        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "humidity", "location": "Airport Met Tower", "raw_val": 78.5, "timestamp": "Today, 12:00 PM", "details": "Relative humidity reading across urban zone"},
+        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 6.2, "timestamp": "Today, 06:00 AM", "details": "Morning localized precipitation gauge"}
+    ]
+    def _seed():
+        try:
+            rows = requests.get(url, timeout=10).json()
+            for r in rows:
+                requests.post(url, json={"action": "delete", "row_id": int(r["row_id"])}, timeout=8)
+            for item in diverse_dataset:
+                requests.post(url, json={"action": "add", **item}, timeout=8)
+            _invalidate_gsheet_cache()
+        except Exception:
+            pass
+    threading.Thread(target=_seed, daemon=True).start()
+    st.session_state.gsheet_logs_cache = diverse_dataset
+    st.session_state.gsheet_cache_dirty = True
+
 
 # --- Data Generation Helper ---
 def generate_node_data(scenario, epsilon, k_anonymity):
@@ -1097,14 +1131,6 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
     num_alerts = len(active_node_alerts)
     total_z_excess = sum([max(0.0, lai - threshold) for lai in node_lais.values()])
     
-    # Categorize reporting nodes across clinical, wastewater, and weather streams
-    clinical_nodes = ["node_campus", "node_soa", "node_hospital"]
-    active_clinical_alerts = [n for n in clinical_nodes if n in active_node_alerts]
-    num_clinical_alerts = len(active_clinical_alerts)
-    
-    water_alert = "node_water" in active_node_alerts
-    weather_alert = "node_weather" in active_node_alerts
-    
     is_false_alarm = False
     false_alarm_prob = 0.0
     
@@ -1116,69 +1142,38 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         risk_class = "safe"
         is_false_alarm = False
         false_alarm_prob = 0.0
+    elif scenario_name == "⚠️ False Alarm (Single-Source Data Typo)" or num_alerts == 1:
+        alert_node_name = node_data[list(active_node_alerts.keys())[0]]["name"] if active_node_alerts else "Kalinga Institute Clinic"
+        outbreak_prob = min(35.0, round(22.0 + total_z_excess * 1.5, 1))
+        confidence = outbreak_prob
+        is_false_alarm = True
+        # In a single-source spike, an isolated center reports an anomaly while 4 centers report baseline.
+        # Zero multi-center corroboration leads to a high probability of a false alarm.
+        single_lai = list(active_node_alerts.values())[0] if active_node_alerts else total_z_excess
+        false_alarm_prob = min(96.0, round(86.0 + min(9.0, single_lai * 0.15), 1))
+        status = "Suspected False Alarm (Single-Source Data Typo / Glitch)"
+        desc = f"Unusual symptoms reported only at '{alert_node_name}' with 0 cross-clinic corroboration. Outbreak probability is {outbreak_prob}%, with an estimated {false_alarm_prob}% probability that this outbreak % is FALSE."
+        risk_class = "warning"
     elif num_alerts == 0:
         outbreak_prob = 0.0
         confidence = 0.0
         status = "Baseline Normal"
-        desc = "All local health centers, municipal wastewater monitors, and weather stations are reporting normal baseline activity. Outbreak probability is 0.0%."
+        desc = "All local health centers are reporting normal baseline activity. Outbreak probability is 0.0%."
         risk_class = "safe"
         is_false_alarm = False
         false_alarm_prob = 0.0
-    elif num_clinical_alerts == 1 and not water_alert and not weather_alert:
-        # Isolated single clinical center anomaly with ZERO wastewater corroboration, ZERO weather vector, and ZERO neighboring clinic confirmation
-        alert_node_name = node_data[active_clinical_alerts[0]]["name"]
-        outbreak_prob = min(35.0, round(20.0 + total_z_excess * 1.2, 1))
-        confidence = outbreak_prob
-        is_false_alarm = True
-        
-        # High false alarm probability because all 3 corroboration streams (clinics, wastewater, weather) are negative
-        false_alarm_prob = min(96.0, round(88.0 + min(8.0, total_z_excess * 0.1), 1))
-        status = "Suspected False Alarm (Isolated Single-Source Spike)"
-        desc = f"Unusual symptoms reported only at '{alert_node_name}' with 0 neighboring clinic corroboration, clean municipal wastewater baseline, and normal weather parameters. Outbreak probability is {outbreak_prob}%, with an estimated {false_alarm_prob}% probability that this outbreak signal is a False Alarm."
-        risk_class = "warning"
-    elif num_clinical_alerts == 1 and (water_alert or weather_alert):
-        # Single clinic spike BUT verified by wastewater bacterial surge OR weather vector
-        alert_node_name = node_data[active_clinical_alerts[0]]["name"]
-        corrob_factors = []
-        if water_alert:
-            corrob_factors.append("municipal wastewater coliform/turbidity surge")
-        if weather_alert:
-            corrob_factors.append("conducive meteorological conditions")
-        corrob_desc = " and ".join(corrob_factors)
-        
-        outbreak_prob = min(95.0, round(78.0 + total_z_excess * 3.5, 1))
-        confidence = outbreak_prob
-        is_false_alarm = False
-        false_alarm_prob = max(5.0, round(100.0 - outbreak_prob, 1))
-        status = "Unusual Disease Cluster Confirmed (Environmental Vector Corroborated)"
-        desc = f"Clinical anomaly at '{alert_node_name}' corroborated by {corrob_desc}. Outbreak probability is {outbreak_prob}% (Verified cluster, false alarm probability: {false_alarm_prob}%)."
-        risk_class = "danger"
     else:
-        # Multi-center corroborated cluster (2+ clinics or multi-modal cross-stream alert)
-        outbreak_prob = min(99.0, round(48.0 + (total_z_excess * 5.5) + (num_alerts * 8), 1))
+        outbreak_prob = min(99.0, round(45.0 + (total_z_excess * 6.5) + (num_alerts * 10), 1))
         confidence = outbreak_prob
         is_false_alarm = False
         false_alarm_prob = max(1.0, round(100.0 - outbreak_prob, 1))
         status = "Unusual Disease Cluster Confirmed"
-        
-        corrob_parts = []
-        if num_clinical_alerts > 1:
-            corrob_parts.append(f"{num_clinical_alerts} independent health clinics")
-        if water_alert:
-            corrob_parts.append("municipal wastewater testing")
-        if weather_alert:
-            corrob_parts.append("regional weather center")
-        corrob_str = ", ".join(corrob_parts) if corrob_parts else f"{num_alerts} independent centers"
-        
-        desc = f"Anomalies corroborated across {corrob_str}. Outbreak probability is {outbreak_prob}% (Verified cluster, false alarm probability: {false_alarm_prob}%)."
+        desc = f"Anomalies corroborated across {num_alerts} independent health monitoring centers. Outbreak probability is {outbreak_prob}% (Verified cluster, false alarm probability: {false_alarm_prob}%)."
         risk_class = "danger"
         
     return {
         "node_lais": node_lais,
         "active_node_alerts": active_node_alerts,
-        "num_clinical_alerts": num_clinical_alerts,
-        "water_alert": water_alert,
-        "weather_alert": weather_alert,
         "outbreak_prob": round(outbreak_prob, 1),
         "confidence": round(confidence, 1),
         "is_false_alarm": is_false_alarm,
@@ -1274,17 +1269,14 @@ with tab_public:
     
     # Specific False Alarm Diagnostic Card if detected
     if is_false_alarm:
-        neighbor_clinic_text = "0 / 2 Neighboring Clinics"
-        water_badge = "🟢 Safe Baseline (0 Coliform/Turbidity Spike)" if not agg_results["water_alert"] else "🚨 Wastewater Bacterial Surge"
-        weather_badge = "🟢 Normal Baseline (0 Vector Anomaly)" if not agg_results["weather_alert"] else "🚨 Meteorological Vector Surge"
         st.markdown(
             f"""
             <div class='glass-card' style='border-left: 5px solid #F59E0B; background: rgba(245, 158, 11, 0.08); margin-bottom: 20px;'>
                 <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 8px;'>
                     <span style='font-size: 1.3rem;'>🔍</span>
-                    <h4 style='margin: 0; color: #F59E0B;'>Multi-Stream False Alarm & Outbreak Corroboration Engine</h4>
+                    <h4 style='margin: 0; color: #F59E0B;'>False Alarm vs. Outbreak Signal Verification</h4>
                 </div>
-                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px;'>
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;'>
                     <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
                         <div style='font-size: 0.8rem; opacity: 0.8;'>Simulation Outbreak Probability</div>
                         <div style='font-size: 1.4rem; font-weight: 700; color: var(--text-color);'>{outbreak_p}%</div>
@@ -1296,14 +1288,9 @@ with tab_public:
                         <div style='font-size: 0.78rem; opacity: 0.85;'>Likely single-source typo / glitch</div>
                     </div>
                     <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
-                        <div style='font-size: 0.8rem; opacity: 0.8;'>Neighboring Clinics Corroboration</div>
-                        <div style='font-size: 1.15rem; font-weight: 700; color: #EF4444;'>{neighbor_clinic_text}</div>
-                        <div style='font-size: 0.78rem; opacity: 0.7;'>0 neighboring clinics confirm surge</div>
-                    </div>
-                    <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
-                        <div style='font-size: 0.8rem; opacity: 0.8;'>Wastewater & Weather Cross-Check</div>
-                        <div style='font-size: 0.82rem; font-weight: 600; color: #10B981; margin-bottom: 2px;'>🧪 {water_badge}</div>
-                        <div style='font-size: 0.82rem; font-weight: 600; color: #10B981;'>☁️ {weather_badge}</div>
+                        <div style='font-size: 0.8rem; opacity: 0.8;'>Cross-Clinic Corroboration</div>
+                        <div style='font-size: 1.4rem; font-weight: 700; color: #EF4444;'>0 / 4 Centers</div>
+                        <div style='font-size: 0.78rem; opacity: 0.7;'>0 neighboring nodes confirm surge</div>
                     </div>
                 </div>
             </div>
@@ -1854,6 +1841,27 @@ with tab_officer:
                 st.rerun()
         if st.session_state.gsheet_url:
             st.markdown(f"<p style='color:#10B981; font-size:0.85rem;'>🟢 <strong>Connected:</strong> {st.session_state.gsheet_url[:60]}...</p>", unsafe_allow_html=True)
+            col_seed1, col_seed2 = st.columns(2)
+            with col_seed1:
+                if st.button("✨ Seed Diverse Simulated Dataset", help="Populates varied, realistic test logs across all 5 nodes"):
+                    seed_gsheet_preset(st.session_state.gsheet_url)
+                    st.success("✅ Diverse simulated dataset successfully written to Google Sheet!")
+                    st.rerun()
+            with col_seed2:
+                if st.button("🧹 Clear All Spreadsheet Data", help="Clears all rows from the Google Sheet"):
+                    def _clear_all():
+                        try:
+                            rows = requests.get(st.session_state.gsheet_url, timeout=10).json()
+                            for r in rows:
+                                requests.post(st.session_state.gsheet_url, json={"action": "delete", "row_id": int(r["row_id"])}, timeout=8)
+                            _invalidate_gsheet_cache()
+                        except Exception:
+                            pass
+                    threading.Thread(target=_clear_all, daemon=True).start()
+                    st.session_state.gsheet_logs_cache = []
+                    st.session_state.gsheet_cache_dirty = True
+                    st.success("Cleared all rows from Google Sheet.")
+                    st.rerun()
         else:
             st.markdown("<p style='color:#F59E0B; font-size:0.85rem;'>🟡 <strong>Disconnected:</strong> Using local session memory (data resets on reload).</p>", unsafe_allow_html=True)
         st.markdown("---")

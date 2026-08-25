@@ -251,6 +251,15 @@ I18N = {
         "app_title": "🛡️ SurakshaNet 2.0",
         "app_sub": "Community Early-Warning Dashboard (Privacy Protected)",
         "inject_outbreak": "🕹️ Select Simulation Scenario",
+        "inject_location": "📍 Outbreak Location / Epicenter",
+        "epicenter_badge_label": "Primary Outbreak Focus:",
+        "baseline_comparison_title": "📊 Historical Baseline vs. Current Privatized Health Radar",
+        "col_node_loc": "Health Center / Sensor Node",
+        "col_hist_baseline": "Historical Normal Baseline",
+        "col_today_val": "Today's Transmitted Count",
+        "col_surge_ratio": "Surge Factor",
+        "col_deviation_sigma": "Baseline Deviation (Z)",
+        "map_title": "🗺️ Regional Health Grid Geospatial Map",
         
         # Scenario Labels
         "scenario_normal": "🟢 Normal Baseline (No Active Outbreaks)",
@@ -371,6 +380,8 @@ I18N = {
         "node_weather_desc": "Records ambient environmental factors correlating with disease vectors.",
         "node_soa_name": "🏫 SOA University Clinic",
         "node_soa_desc": "Monitors student health visits and symptoms at Siksha 'O' Anusandhan, Bhubaneswar.",
+        "node_utkal_name": "🏫 Utkal University Health Center",
+        "node_utkal_desc": "Monitors student health visits and symptoms across Utkal University, Vani Vihar.",
         
         # Symptom Labels
         "lbl_gi": "Diarrhea / Stomach Pain",
@@ -394,6 +405,15 @@ I18N = {
         "app_title": "🛡️ ସୁରକ୍ଷା-ନେଟ୍ ୨.୦",
         "app_sub": "ସହଜ ମହାମାରୀ ସତର୍କତା ବ୍ୟବସ୍ଥା (ଗୋପନୀୟତା ସୁରକ୍ଷିତ)",
         "inject_outbreak": "🕹️ ସିନାରିଓ ଚୟନ କରନ୍ତୁ",
+        "inject_location": "📍 ପ୍ରକୋପ କେନ୍ଦ୍ର / ସ୍ଥାନ",
+        "epicenter_badge_label": "ମୁଖ୍ୟ ପ୍ରକୋପ ସ୍ଥାନ:",
+        "baseline_comparison_title": "📊 ଐତିହାସିକ ହାରାହାରି ଏବଂ ଆଜିର ସଂଖ୍ୟା ତୁଳନା",
+        "col_node_loc": "ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର",
+        "col_hist_baseline": "ଐତିହାସିକ ସ୍ୱାଭାବିକ ସଂଖ୍ୟା",
+        "col_today_val": "ଆଜିର ପ୍ରେରିତ ସଂଖ୍ୟା",
+        "col_surge_ratio": "ବୃଦ୍ଧି ମାତ୍ରା",
+        "col_deviation_sigma": "ଅସ୍ୱାଭାବିକ ମାତ୍ରା (Z)",
+        "map_title": "🗺️ ଆଞ୍ଚଳିକ ସ୍ୱାସ୍ଥ୍ୟ ଗ୍ରିଡ୍ ମ୍ୟାପ୍",
         
         # Scenario Labels
         "scenario_normal": "🟢 ସ୍ୱାଭାବିକ ସ୍ଥିତି (କୌଣସି ସତର୍କତା ନାହିଁ)",
@@ -513,7 +533,9 @@ I18N = {
         "node_weather_name": "☁️ ଭୁବନେଶ୍ୱର ପାଣିପାଗ କେନ୍ଦ୍ର",
         "node_weather_desc": "ରୋଗ ବାହକ ଅନୁକୁଳ ପାଣିପାଗ ସୂଚନା ଟ୍ରାକ୍ କରେ।",
         "node_soa_name": "🏫 ସୋଆ ବିଶ୍ୱବିଦ୍ୟାଳୟ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର",
-        "node_soa_desc": "ଭୁବנେଶ୍ୱର ସୋଆ ବିଶ୍ୱବିଦ୍ୟาଳୟ କ୍ୟାମ୍ପସର ଦୈନିକ ଚିକିତ୍ସା ତଥ୍ୟ।",
+        "node_soa_desc": "ଭୁବନେଶ୍ୱର ସୋଆ ବିଶ୍ୱବିଦ୍ୟାଳୟ କ୍ୟାମ୍ପସର ଦୈନିକ ଚିକିତ୍ସା ତଥ୍ୟ।",
+        "node_utkal_name": "🏫 ଉତ୍କଳ ବିଶ୍ୱବିଦ୍ୟାଳୟ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର",
+        "node_utkal_desc": "ବାଣୀବିହାର କ୍ୟାମ୍ପସ ଛାତ୍ର ଏବଂ କର୍ମଚାରୀଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ ଲକ୍ଷଣ ଟ୍ରାକ୍ କରିଥାଏ।",
         
         # Metric Labels
         "lbl_gi": "ଝାଡ଼ାବାନ୍ତି / ପେଟ ଯନ୍ତ୍ରଣା",
@@ -537,6 +559,15 @@ I18N = {
         "app_title": "🛡️ सुरक्षा-नेट 2.0",
         "app_sub": "सामुदायिक स्वास्थ्य चेतावनी ग्रिड (गोपनीयता सुरक्षित)",
         "inject_outbreak": "🕹️ सिमुलेशन परिदृश्य चुनें",
+        "inject_location": "📍 प्रकोप का मुख्य केंद्र / स्थान",
+        "epicenter_badge_label": "मुख्य प्रकोप स्थान:",
+        "baseline_comparison_title": "📊 ऐतिहासिक सामान्य औसत बनाम आज का प्रेषित डेटा",
+        "col_node_loc": "स्वास्थ्य केंद्र",
+        "col_hist_baseline": "ऐतिहासिक सामान्य औसत",
+        "col_today_val": "आज का प्रेषित मान",
+        "col_surge_ratio": "वृद्धि अनुपात",
+        "col_deviation_sigma": "विचलन (Z)",
+        "map_title": "🗺️ क्षेत्रीय स्वास्थ्य ग्रिड मानचित्र",
         
         # Scenario Labels
         "scenario_normal": "🟢 सामान्य स्थिति (कोई सक्रिय प्रकोप नहीं)",
@@ -657,6 +688,8 @@ I18N = {
         "node_weather_desc": "मौसम की स्थिति ट्रैक करता है जो वेक्टर जनित रोगों को बढ़ावा दे सकती है।",
         "node_soa_name": "🏫 सोआ विश्वविद्यालय स्वास्थ्य केंद्र",
         "node_soa_desc": "भुवनेश्वर सोआ विश्वविद्यालय कैंपस का दैनिक स्वास्थ्य विवरण।",
+        "node_utkal_name": "🏫 उत्कल विश्वविद्यालय स्वास्थ्य केंद्र",
+        "node_utkal_desc": "वाणी विहार कैंपस में छात्रों और कर्मचारियों के स्वास्थ्य लक्षणों की निगरानी करता है।",
         
         # Symptom Labels
         "lbl_gi": "दस्त / पेट दर्द",
@@ -740,7 +773,7 @@ st.sidebar.markdown("---")
 st.sidebar.info(t["zero_central_policy"])
 
 # --- Top Navigation / Main Header ---
-col_head1, col_head2 = st.columns([2, 1.1])
+col_head1, col_head2 = st.columns([1.5, 1.5])
 with col_head1:
     st.markdown(
         f"""
@@ -751,29 +784,53 @@ with col_head1:
         """, unsafe_allow_html=True
     )
 with col_head2:
-    # Diagnostic scenario injection panel
-    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-    scenario_list = [
-        "🟢 Normal Baseline (No Active Outbreaks)",
-        "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
-        "🫁 Cold-Snap Acute Respiratory Surge",
-        "⚠️ False Alarm (Single-Source Data Typo)",
-        "🔬 Small Cohort Threat (k-Anonymity Guard Demo)"
-    ]
-    if "sim_scenario_choice" not in st.session_state or st.session_state.sim_scenario_choice not in scenario_list:
-        st.session_state.sim_scenario_choice = scenario_list[0]
-    
-    scenario = st.selectbox(
-        t["inject_outbreak"],
-        scenario_list,
-        key="sim_scenario_choice"
-    )
-    st.session_state.current_scenario = scenario
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    col_sel1, col_sel2 = st.columns(2)
+    with col_sel1:
+        scenario_list = [
+            "🟢 Normal Baseline (No Active Outbreaks)",
+            "🌊 Gastrointestinal Outbreak Cluster (Waterborne)",
+            "🫁 Cold-Snap Acute Respiratory Surge",
+            "⚠️ False Alarm (Single-Source Data Typo)",
+            "🔬 Small Cohort Threat (k-Anonymity Guard Demo)"
+        ]
+        if "sim_scenario_choice" not in st.session_state or st.session_state.sim_scenario_choice not in scenario_list:
+            st.session_state.sim_scenario_choice = scenario_list[0]
+        
+        scenario = st.selectbox(
+            t["inject_outbreak"],
+            scenario_list,
+            key="sim_scenario_choice"
+        )
+        st.session_state.current_scenario = scenario
+        
+    with col_sel2:
+        epicenter_list = [
+            "🌐 All Monitored Regions (Cross-City)",
+            "🏫 Kalinga Institute Clinic (Campus North)",
+            "🏫 SOA University Health Center (Campus South)",
+            "🏫 Utkal University Health Center (Campus East)",
+            "🏥 Capital Hospital (Central OPD)",
+            "🧪 Municipal Water Treatment Zone"
+        ]
+        if "outbreak_epicenter_choice" not in st.session_state or st.session_state.outbreak_epicenter_choice not in epicenter_list:
+            st.session_state.outbreak_epicenter_choice = epicenter_list[0]
+            
+        epicenter = st.selectbox(
+            t.get("inject_location", "📍 Outbreak Location / Epicenter"),
+            epicenter_list,
+            key="outbreak_epicenter_choice"
+        )
+        st.session_state.current_epicenter = epicenter
 
 # --- Node Parameter Schema ---
 NODES = {
     "node_campus": {
         "name": t["node_campus_name"],
+        "short_name": "Kalinga Institute Clinic",
+        "lat": 20.3533,
+        "lon": 85.8176,
+        "zone": "Campus Zone North",
         "type": "Clinic / Campus visit log",
         "description": t["node_campus_desc"],
         "metrics": {
@@ -782,18 +839,40 @@ NODES = {
             "fever": {"label": t["lbl_fever"], "baseline_mean": 8.0, "baseline_std": 1.8, "is_count": True}
         }
     },
-    "node_water": {
-        "name": t["node_water_name"],
-        "type": "Environmental testing node",
-        "description": t["node_water_desc"],
+    "node_soa": {
+        "name": t["node_soa_name"],
+        "short_name": "SOA University Health Center",
+        "lat": 20.2520,
+        "lon": 85.7890,
+        "zone": "Campus Zone South",
+        "type": "Clinic / Campus visit log",
+        "description": t["node_soa_desc"],
         "metrics": {
-            "coliform": {"label": t["lbl_coliform"], "baseline_mean": 1.2, "baseline_std": 0.4, "is_count": False},
-            "turbidity": {"label": t["lbl_turb"], "baseline_mean": 1.0, "baseline_std": 0.3, "is_count": False},
-            "ph": {"label": t["lbl_ph"], "baseline_mean": 7.2, "baseline_std": 0.15, "is_count": False}
+            "gastrointestinal": {"label": t["lbl_gi"], "baseline_mean": 4.0, "baseline_std": 1.0, "is_count": True},
+            "respiratory": {"label": t["lbl_resp"], "baseline_mean": 6.0, "baseline_std": 1.4, "is_count": True},
+            "fever": {"label": t["lbl_fever"], "baseline_mean": 9.0, "baseline_std": 2.0, "is_count": True}
+        }
+    },
+    "node_utkal": {
+        "name": t["node_utkal_name"],
+        "short_name": "Utkal University Clinic",
+        "lat": 20.3012,
+        "lon": 85.8428,
+        "zone": "Campus Zone East (Vani Vihar)",
+        "type": "Clinic / Campus visit log",
+        "description": t["node_utkal_desc"],
+        "metrics": {
+            "gastrointestinal": {"label": t["lbl_gi"], "baseline_mean": 3.5, "baseline_std": 0.9, "is_count": True},
+            "respiratory": {"label": t["lbl_resp"], "baseline_mean": 5.5, "baseline_std": 1.3, "is_count": True},
+            "fever": {"label": t["lbl_fever"], "baseline_mean": 8.5, "baseline_std": 1.9, "is_count": True}
         }
     },
     "node_hospital": {
         "name": t["node_hospital_name"],
+        "short_name": "Capital Hospital Central OPD",
+        "lat": 20.2644,
+        "lon": 85.8281,
+        "zone": "Central Urban Triage",
         "type": "Public hospital outpatient portal",
         "description": t["node_hospital_desc"],
         "metrics": {
@@ -802,24 +881,32 @@ NODES = {
             "fever_high": {"label": t["lbl_fever_high"], "baseline_mean": 25.0, "baseline_std": 4.5, "is_count": True}
         }
     },
+    "node_water": {
+        "name": t["node_water_name"],
+        "short_name": "Municipal Water Station",
+        "lat": 20.2961,
+        "lon": 85.8245,
+        "zone": "Wastewater & Treatment Plant",
+        "type": "Environmental testing node",
+        "description": t["node_water_desc"],
+        "metrics": {
+            "coliform": {"label": t["lbl_coliform"], "baseline_mean": 1.2, "baseline_std": 0.4, "is_count": False},
+            "turbidity": {"label": t["lbl_turb"], "baseline_mean": 1.0, "baseline_std": 0.3, "is_count": False},
+            "ph": {"label": t["lbl_ph"], "baseline_mean": 7.2, "baseline_std": 0.15, "is_count": False}
+        }
+    },
     "node_weather": {
         "name": t["node_weather_name"],
+        "short_name": "Regional Weather Hub",
+        "lat": 20.2522,
+        "lon": 85.8167,
+        "zone": "Regional Met Center",
         "type": "Regional weather node",
         "description": t["node_weather_desc"],
         "metrics": {
             "temp": {"label": t["lbl_temp"], "baseline_mean": 28.5, "baseline_std": 1.0, "is_count": False},
             "humidity": {"label": t["lbl_humidity"], "baseline_mean": 75.0, "baseline_std": 3.0, "is_count": False},
             "rainfall": {"label": t["lbl_rainfall"], "baseline_mean": 2.0, "baseline_std": 0.8, "is_count": False}
-        }
-    },
-    "node_soa": {
-        "name": t["node_soa_name"],
-        "type": "Clinic / Campus visit log",
-        "description": t["node_soa_desc"],
-        "metrics": {
-            "gastrointestinal": {"label": t["lbl_gi"], "baseline_mean": 4.0, "baseline_std": 1.0, "is_count": True},
-            "respiratory": {"label": t["lbl_resp"], "baseline_mean": 6.0, "baseline_std": 1.4, "is_count": True},
-            "fever": {"label": t["lbl_fever"], "baseline_mean": 9.0, "baseline_std": 2.0, "is_count": True}
         }
     }
 }
@@ -973,7 +1060,7 @@ def seed_gsheet_preset(url):
 
 
 # --- Data Generation Helper ---
-def generate_node_data(scenario, epsilon, k_anonymity):
+def generate_node_data(scenario, epicenter, epsilon, k_anonymity):
     seed_map = {
         "🟢 Normal Baseline (No Active Outbreaks)": 100,
         "🌊 Gastrointestinal Outbreak Cluster (Waterborne)": 200,
@@ -984,9 +1071,20 @@ def generate_node_data(scenario, epsilon, k_anonymity):
     np.random.seed(seed_map.get(scenario, 100))
     
     node_data = {}
+    is_all_regions = "All Monitored" in epicenter or "Cross-City" in epicenter
+    is_kalinga_epicenter = "Kalinga" in epicenter or is_all_regions
+    is_soa_epicenter = "SOA" in epicenter or is_all_regions
+    is_utkal_epicenter = "Utkal" in epicenter or is_all_regions
+    is_hospital_epicenter = "Capital Hospital" in epicenter or is_all_regions
+    is_water_epicenter = "Water" in epicenter or is_all_regions
+    
     for node_id, node_info in NODES.items():
         node_data[node_id] = {
             "name": node_info["name"],
+            "short_name": node_info.get("short_name", node_info["name"]),
+            "lat": node_info.get("lat", 20.3),
+            "lon": node_info.get("lon", 85.8),
+            "zone": node_info.get("zone", "Bhubaneswar Urban"),
             "type": node_info["type"],
             "description": node_info["description"],
             "metrics": {}
@@ -997,7 +1095,6 @@ def generate_node_data(scenario, epsilon, k_anonymity):
         for m_id in node_info["metrics"].keys():
             manual_sums[m_id] = 0.0
             
-        # Determine source of logs (Google Sheet or Local Session State)
         active_gsheet_url = st.session_state.gsheet_url
         if active_gsheet_url:
             sheet_logs = fetch_gsheet_logs_cached(active_gsheet_url)
@@ -1018,51 +1115,59 @@ def generate_node_data(scenario, epsilon, k_anonymity):
             std = metric_info["baseline_std"]
             is_count = metric_info["is_count"]
             
+            # 1. Normal Baseline: Standard routine daily fluctuations around historical mean
             val = max(0.0, np.random.normal(mean, std))
             
-            # Scenario modifications
+            # 2. Location-Based Outbreak Surges
             if scenario == "🌊 Gastrointestinal Outbreak Cluster (Waterborne)":
-                if node_id == "node_water":
-                    if metric_id == "coliform":
-                        val = 15.6
-                    elif metric_id == "turbidity":
-                        val = 6.4
+                if node_id == "node_water" and (is_water_epicenter or is_all_regions or is_kalinga_epicenter):
+                    if metric_id == "coliform": val = 15.6 if is_water_epicenter else 8.4
+                    elif metric_id == "turbidity": val = 6.4 if is_water_epicenter else 3.8
                 elif node_id == "node_campus" and metric_id == "gastrointestinal":
-                    val = 42.0
+                    val = 42.0 if is_kalinga_epicenter else max(val, mean * 1.3)
                 elif node_id == "node_soa" and metric_id == "gastrointestinal":
-                    val = 48.0
+                    val = 48.0 if is_soa_epicenter else max(val, mean * 1.2)
+                elif node_id == "node_utkal" and metric_id == "gastrointestinal":
+                    val = 45.0 if is_utkal_epicenter else max(val, mean * 1.25)
                 elif node_id == "node_hospital" and metric_id == "diarrheal":
-                    val = 78.0
+                    val = 78.0 if is_hospital_epicenter else (45.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 24.0)
                 elif node_id == "node_weather":
-                    if metric_id == "temp":
-                        val = 33.2
-                    elif metric_id == "rainfall":
-                        val = 45.0
-                        
+                    if metric_id == "temp": val = 33.2
+                    elif metric_id == "rainfall": val = 45.0
+                    
             elif scenario == "🫁 Cold-Snap Acute Respiratory Surge":
                 if node_id == "node_campus" and metric_id == "respiratory":
-                    val = 48.0
+                    val = 48.0 if is_kalinga_epicenter else max(val, mean * 1.2)
                 elif node_id == "node_soa" and metric_id == "respiratory":
-                    val = 52.0
+                    val = 52.0 if is_soa_epicenter else max(val, mean * 1.3)
+                elif node_id == "node_utkal" and metric_id == "respiratory":
+                    val = 50.0 if is_utkal_epicenter else max(val, mean * 1.25)
                 elif node_id == "node_hospital" and metric_id == "ili":
-                    val = 98.0
+                    val = 98.0 if is_hospital_epicenter else (55.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 28.0)
                 elif node_id == "node_weather":
-                    if metric_id == "temp":
-                        val = 16.5
-                    elif metric_id == "humidity":
-                        val = 93.0
-                        
+                    if metric_id == "temp": val = 16.5
+                    elif metric_id == "humidity": val = 93.0
+                    
             elif scenario == "⚠️ False Alarm (Single-Source Data Typo)":
-                if node_id == "node_campus" and metric_id == "fever":
-                    val = 142.0
+                # Single isolated clinic enters extreme outlier with zero multi-center corroboration
+                if (node_id == "node_campus" and is_kalinga_epicenter) or (not is_soa_epicenter and not is_utkal_epicenter and not is_hospital_epicenter and node_id == "node_campus"):
+                    if metric_id == "fever": val = 142.0
+                elif node_id == "node_soa" and is_soa_epicenter:
+                    if metric_id == "fever": val = 155.0
+                elif node_id == "node_utkal" and is_utkal_epicenter:
+                    if metric_id == "fever": val = 148.0
+                elif node_id == "node_hospital" and is_hospital_epicenter:
+                    if metric_id == "fever_high": val = 180.0
                     
             elif scenario == "🔬 Small Cohort Threat (k-Anonymity Guard Demo)":
-                if node_id == "node_campus" and metric_id == "gastrointestinal":
+                if node_id == "node_campus" and is_kalinga_epicenter and metric_id == "gastrointestinal":
                     val = 3.0
-                elif node_id == "node_soa" and metric_id == "gastrointestinal":
+                elif node_id == "node_soa" and is_soa_epicenter and metric_id == "gastrointestinal":
                     val = 2.0
+                elif node_id == "node_utkal" and is_utkal_epicenter and metric_id == "gastrointestinal":
+                    val = 3.0
             
-            if metric_id in manual_sums:
+            if metric_id in manual_sums and manual_sums[metric_id] > 0:
                 val += manual_sums[metric_id]
                 
             if is_count:
@@ -1081,7 +1186,7 @@ def generate_node_data(scenario, epsilon, k_anonymity):
             else:
                 dp_val = max(0.0, round(dp_val, 2))
                 
-            # k-Anonymity Suppression
+            # k-Anonymity Suppression Guard
             suppressed = False
             transmitted_val = dp_val
             if is_count and val > 0 and val < k_anonymity:
@@ -1089,6 +1194,7 @@ def generate_node_data(scenario, epsilon, k_anonymity):
                 transmitted_val = 0.0
                 
             z_score = (transmitted_val - mean) / std if std > 0 else 0.0
+            surge_ratio = round(transmitted_val / max(0.1, mean), 1)
             
             node_data[node_id]["metrics"][metric_id] = {
                 "label": metric_info["label"],
@@ -1098,13 +1204,14 @@ def generate_node_data(scenario, epsilon, k_anonymity):
                 "suppressed": suppressed,
                 "transmitted_val": transmitted_val,
                 "z_score": round(z_score, 2),
+                "surge_ratio": surge_ratio,
                 "baseline_mean": mean,
                 "baseline_std": std
             }
     return node_data
 
 # --- Federated Aggregation consensus logic ---
-def run_federated_aggregation(node_data, threshold, scenario_name=""):
+def run_federated_aggregation(node_data, threshold, scenario_name="", epicenter_name=""):
     node_lais = {}
     contributing_signals = []
     
@@ -1115,10 +1222,17 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
             z_scores.append(z_val)
             if z_val > 0:
                 contributing_signals.append({
+                    "node_id": node_id,
                     "node_name": node_info["name"],
+                    "short_name": node_info.get("short_name", node_info["name"]),
+                    "lat": node_info.get("lat", 20.3),
+                    "lon": node_info.get("lon", 85.8),
+                    "zone": node_info.get("zone", "Bhubaneswar"),
                     "metric_label": m["label"],
                     "z_score": z_val,
-                    "transmitted_val": m["transmitted_val"]
+                    "surge_ratio": m["surge_ratio"],
+                    "transmitted_val": m["transmitted_val"],
+                    "baseline_mean": m["baseline_mean"]
                 })
         
         node_lais[node_id] = max(z_scores) if z_scores else 0.0
@@ -1166,7 +1280,7 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         is_false_alarm = False
         false_alarm_prob = round(100.0 - outbreak_prob, 1)
         status = "Waterborne Gastrointestinal Outbreak Cluster Confirmed"
-        desc = f"Corroborated waterborne outbreak: Elevated gastrointestinal and diarrheal cases across {num_alerts} clinics confirmed by municipal wastewater coliform surge and heavy rainfall."
+        desc = f"Corroborated waterborne outbreak ({epicenter_name}): Elevated gastrointestinal and diarrheal cases across {num_alerts} centers confirmed by municipal wastewater coliform surge and heavy rainfall."
         risk_class = "danger"
     elif scenario_name == "🫁 Cold-Snap Acute Respiratory Surge":
         outbreak_prob = min(88.0, round(82.0 + min(6.0, total_z_excess * 0.2), 1))
@@ -1174,7 +1288,7 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         is_false_alarm = False
         false_alarm_prob = round(100.0 - outbreak_prob, 1)
         status = "Sentinel Respiratory & Influenza Surge Advisory"
-        desc = f"Seasonal respiratory surge: Upper respiratory infections and ILI triage spikes across {num_alerts} centers corroborated by regional cold snap (16.5°C) and high humidity (93%)."
+        desc = f"Seasonal respiratory surge ({epicenter_name}): Upper respiratory infections and ILI triage spikes across {num_alerts} centers corroborated by regional cold snap (16.5°C) and high humidity (93%)."
         risk_class = "warning"
     else:
         # Dynamic Detection for custom/mixed cases
@@ -1199,6 +1313,57 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         is_false_alarm = False
         false_alarm_prob = max(1.0, round(100.0 - outbreak_prob, 1))
         
+    # --- Localized Telemetry Logic for Target Epicenter ---
+    loc_node_id = None
+    if "Kalinga" in epicenter_name: loc_node_id = "node_campus"
+    elif "SOA" in epicenter_name: loc_node_id = "node_soa"
+    elif "Utkal" in epicenter_name: loc_node_id = "node_utkal"
+    elif "Capital Hospital" in epicenter_name: loc_node_id = "node_hospital"
+    elif "Water" in epicenter_name: loc_node_id = "node_water"
+    elif "Weather" in epicenter_name: loc_node_id = "node_weather"
+    
+    local_metrics = None
+    if loc_node_id and loc_node_id in node_data:
+        target_node = node_data[loc_node_id]
+        target_signals = [s for s in contributing_signals if s.get("node_id") == loc_node_id]
+        target_lai = node_lais.get(loc_node_id, 0.0)
+        
+        if is_false_alarm:
+            local_prob = outbreak_prob
+            local_risk = "warning"
+            local_status = f"Suspected Local Anomaly / Data Typo at {target_node['short_name']}"
+            local_desc = f"An isolated spike was logged at {target_node['short_name']}, but 0 neighboring facilities corroborate the surge ({false_alarm_prob}% chance of false alarm)."
+        elif target_lai <= 1.5:
+            local_prob = 0.0
+            local_risk = "safe"
+            local_status = f"Normal Baseline Safe ({target_node['short_name']})"
+            local_desc = f"Patient symptom activity at {target_node['short_name']} ({target_node['zone']}) is currently within normal historical limits (Z = {target_lai}σ)."
+        elif target_lai <= 3.0:
+            local_prob = min(75.0, round(45.0 + target_lai * 10, 1))
+            local_risk = "warning"
+            local_status = f"Elevated Warning ({target_node['short_name']})"
+            local_desc = f"Elevated symptom activity logged at {target_node['short_name']} ({target_node['zone']}) above baseline (Z = {target_lai}σ)."
+        else:
+            local_prob = min(99.0, round(88.0 + min(11.0, target_lai * 0.2), 1))
+            local_risk = "danger"
+            local_status = f"Acute Outbreak Cluster Active ({target_node['short_name']})"
+            local_desc = f"Severe symptom surge detected at {target_node['short_name']} ({target_node['zone']}) exceeding {round(target_lai, 1)} standard deviations from baseline."
+            
+        local_metrics = {
+            "node_id": loc_node_id,
+            "node_name": target_node["name"],
+            "short_name": target_node["short_name"],
+            "lat": target_node["lat"],
+            "lon": target_node["lon"],
+            "zone": target_node["zone"],
+            "outbreak_prob": local_prob,
+            "risk_class": local_risk,
+            "status": local_status,
+            "description": local_desc,
+            "lai": target_lai,
+            "signals": target_signals
+        }
+        
     return {
         "node_lais": node_lais,
         "active_node_alerts": active_node_alerts,
@@ -1209,12 +1374,13 @@ def run_federated_aggregation(node_data, threshold, scenario_name=""):
         "status": status,
         "description": desc,
         "risk_class": risk_class,
-        "contributing_signals": contributing_signals
+        "contributing_signals": contributing_signals,
+        "local_metrics": local_metrics
     }
 
 # --- Execute Core Logic ---
-node_data = generate_node_data(scenario, epsilon, k_anonymity)
-agg_results = run_federated_aggregation(node_data, false_alarm_threshold, scenario)
+node_data = generate_node_data(scenario, epicenter, epsilon, k_anonymity)
+agg_results = run_federated_aggregation(node_data, false_alarm_threshold, scenario, epicenter)
 
 # --- Navigation Tabs ---
 tab_public, tab_clinic, tab_officer, tab_audit = st.tabs([
@@ -1228,12 +1394,43 @@ tab_public, tab_clinic, tab_officer, tab_audit = st.tabs([
 # TAB 1: PUBLIC HEALTH RADAR (PRIMARY - GENERAL PUBLIC)
 # ==============================================================================
 with tab_public:
-    st.markdown(f"### {t['radar_title']}")
-    st.markdown(t['radar_desc'])
+    # Surveillance View Scope Control
+    is_specific_loc = ("All Monitored" not in epicenter and "Cross-City" not in epicenter and agg_results.get("local_metrics") is not None)
     
-    c_status = agg_results["risk_class"]
+    col_scope1, col_scope2 = st.columns([1.7, 1.3])
+    with col_scope1:
+        st.markdown(f"### {t['radar_title']}")
+        st.markdown(t['radar_desc'])
+    with col_scope2:
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        view_scope = st.radio(
+            "🔭 Surveillance Data Scope:",
+            ["🎯 Focus on Selected Location", "🌐 Regional City Grid View"],
+            index=0 if is_specific_loc else 1,
+            horizontal=True,
+            key="radar_view_scope"
+        )
+        
+    # Evaluate scoped display variables
+    loc_info = agg_results.get("local_metrics")
+    is_local_focus = (view_scope == "🎯 Focus on Selected Location" and loc_info is not None)
+    
+    if is_local_focus:
+        display_status = loc_info["status"]
+        display_desc = loc_info["description"]
+        display_risk = loc_info["risk_class"]
+        display_outbreak_p = loc_info["outbreak_prob"]
+        display_signals = loc_info["signals"]
+        location_scope_label = f"🎯 Showing Data Specific to: <strong>{loc_info['short_name']}</strong> ({loc_info['zone']})"
+    else:
+        display_status = agg_results["status"]
+        display_desc = agg_results["description"]
+        display_risk = agg_results["risk_class"]
+        display_outbreak_p = agg_results["outbreak_prob"]
+        display_signals = agg_results["contributing_signals"]
+        location_scope_label = f"🌐 Showing Aggregated Regional Data Across <strong>All Monitored Centers</strong>"
+        
     is_false_alarm = agg_results["is_false_alarm"]
-    outbreak_p = agg_results["outbreak_prob"]
     false_p = agg_results["false_alarm_prob"]
     
     # Determine alert colors, backgrounds, and icons dynamically
@@ -1241,14 +1438,14 @@ with tab_public:
         alert_bg = "rgba(245, 158, 11, 0.15)"
         alert_border = "#F59E0B"
         alert_icon = "⚠️"
-        safety_advice = t.get("adv_false_alarm", "").replace("{false_prob}", str(false_p)).replace("{outbreak_prob}", str(outbreak_p))
-    elif c_status == "safe":
+        safety_advice = t.get("adv_false_alarm", "").replace("{false_prob}", str(false_p)).replace("{outbreak_prob}", str(display_outbreak_p))
+    elif display_risk == "safe":
         alert_bg = "rgba(16, 185, 129, 0.12)"
         alert_border = "#10B981"
         alert_icon = "🟢"
         safety_advice = t["adv_safe"]
     else:
-        if c_status == "warning":
+        if display_risk == "warning":
             alert_bg = "rgba(245, 158, 11, 0.15)"
             alert_border = "#F59E0B"
             alert_icon = "🟡"
@@ -1258,18 +1455,18 @@ with tab_public:
             alert_icon = "🚨"
             
         # Determine advice based on scenario and symptoms
-        if "Gastrointestinal" in scenario or "Water" in scenario or any("gastro" in str(s["metric_label"]).lower() or "diarrh" in str(s["metric_label"]).lower() for s in agg_results["contributing_signals"]):
+        if "Gastrointestinal" in scenario or "Water" in scenario or any("gastro" in str(s["metric_label"]).lower() or "diarrh" in str(s["metric_label"]).lower() for s in display_signals):
             safety_advice = t["adv_gi"]
-        elif "Respiratory" in scenario or "Cold" in scenario or any("respir" in str(s["metric_label"]).lower() or "cough" in str(s["metric_label"]).lower() or "ili" in str(s["metric_label"]).lower() for s in agg_results["contributing_signals"]):
+        elif "Respiratory" in scenario or "Cold" in scenario or any("respir" in str(s["metric_label"]).lower() or "cough" in str(s["metric_label"]).lower() or "ili" in str(s["metric_label"]).lower() for s in display_signals):
             safety_advice = t["adv_resp"]
         else:
             safety_advice = t["adv_general"]
             
     # Determine dynamic class for animations
-    if c_status == "safe":
+    if display_risk == "safe":
         alert_class = ""
         alert_style = f"background-color: {alert_bg}; border: 2px solid {alert_border}; border-radius: 8px; padding: 18px; margin-bottom: 20px;"
-    elif is_false_alarm or c_status == "warning":
+    elif is_false_alarm or display_risk == "warning":
         alert_class = "class='alert-banner-warning'"
         alert_style = f"background-color: {alert_bg};"
     else:
@@ -1278,17 +1475,18 @@ with tab_public:
         
     # Banner Metric Badges
     if is_false_alarm:
-        badge_html = f"<div style='display:flex;gap:14px;text-align:right;flex-wrap:wrap;justify-content:flex-end;'><div style='background:rgba(255,255,255,0.04);padding:8px 14px;border-radius:8px;border:1px solid rgba(245,158,11,0.3);'><span style='font-size:0.75rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:{alert_border};'>{t['threat_prob']}</span><div style='font-size:1.9rem;font-weight:800;color:{alert_border};line-height:1.1;'>{outbreak_p}%</div></div><div style='background:rgba(245,158,11,0.12);padding:8px 14px;border-radius:8px;border:2px solid #F59E0B;'><span style='font-size:0.75rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:#F59E0B;'>⚠️ Probability Outbreak is False</span><div style='font-size:1.9rem;font-weight:800;color:#F59E0B;line-height:1.1;'>{false_p}%</div></div></div>"
+        badge_html = f"<div style='display:flex;gap:14px;text-align:right;flex-wrap:wrap;justify-content:flex-end;'><div style='background:rgba(255,255,255,0.04);padding:8px 14px;border-radius:8px;border:1px solid rgba(245,158,11,0.3);'><span style='font-size:0.75rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:{alert_border};'>{t['threat_prob']}</span><div style='font-size:1.9rem;font-weight:800;color:{alert_border};line-height:1.1;'>{display_outbreak_p}%</div></div><div style='background:rgba(245,158,11,0.12);padding:8px 14px;border-radius:8px;border:2px solid #F59E0B;'><span style='font-size:0.75rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:#F59E0B;'>⚠️ Probability Outbreak is False</span><div style='font-size:1.9rem;font-weight:800;color:#F59E0B;line-height:1.1;'>{false_p}%</div></div></div>"
     else:
-        badge_html = f"<div style='text-align:right;min-width:150px;'><span style='font-size:0.8rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:{alert_border};'>{t['threat_prob']}</span><div style='font-size:2.2rem;font-weight:800;color:{alert_border};line-height:1.1;'>{outbreak_p}%</div></div>"
+        badge_html = f"<div style='text-align:right;min-width:150px;'><span style='font-size:0.8rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;color:{alert_border};'>{t['threat_prob']}</span><div style='font-size:2.2rem;font-weight:800;color:{alert_border};line-height:1.1;'>{display_outbreak_p}%</div></div>"
 
     # Outbreak Warning Status (Filled high-visibility alert banner)
     alert_banner_html = (
         f"<div {alert_class} style='{alert_style}'>"
         f"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;'>"
         f"<div style='flex:1;min-width:300px;'>"
-        f"<h3 style='margin:0;font-size:1.45rem;color:{alert_border} !important;'>{alert_icon} {agg_results['status']}</h3>"
-        f"<p style='color:var(--text-color);opacity:0.9;margin:6px 0 0 0;font-size:1.02rem;'>{agg_results['description']}</p>"
+        f"<h3 style='margin:0;font-size:1.45rem;color:{alert_border} !important;'>{alert_icon} {display_status}</h3>"
+        f"<p style='color:var(--text-color);opacity:0.9;margin:6px 0 0 0;font-size:1.02rem;'>{display_desc}</p>"
+        f"<div style='margin-top:10px;'><span style='background:rgba(255,255,255,0.08);border:1px solid rgba(128,128,128,0.3);border-radius:20px;padding:4px 12px;font-size:0.85rem;font-weight:600;'>{location_scope_label}</span></div>"
         f"</div>"
         f"{badge_html}"
         f"</div>"
@@ -1308,7 +1506,7 @@ with tab_public:
                 <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;'>
                     <div style='background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2);'>
                         <div style='font-size: 0.8rem; opacity: 0.8;'>Simulation Outbreak Probability</div>
-                        <div style='font-size: 1.4rem; font-weight: 700; color: var(--text-color);'>{outbreak_p}%</div>
+                        <div style='font-size: 1.4rem; font-weight: 700; color: var(--text-color);'>{display_outbreak_p}%</div>
                         <div style='font-size: 0.78rem; opacity: 0.7;'>Calculated from single-site anomaly</div>
                     </div>
                     <div style='background: rgba(245,158,11,0.12); padding: 12px; border-radius: 6px; border: 1px solid #F59E0B;'>
@@ -1336,27 +1534,29 @@ with tab_public:
         """, unsafe_allow_html=True
     )
     
-    # Simple Visual Trends (Public-friendly Chart)
+    # Visual Trends Chart & Gauge
     col_pub1, col_pub2 = st.columns([1.5, 2])
     with col_pub1:
-        st.markdown(f"#### {t['active_symptoms']}")
-        sigs = agg_results["contributing_signals"]
+        symptom_header = f"#### {t['active_symptoms']} ({loc_info['short_name'] if is_local_focus else 'All Regions'})"
+        st.markdown(symptom_header)
+        sigs = display_signals
         
         if not sigs or all(s["z_score"] <= 0 for s in sigs):
-            st.info(t["xai_no_anom"])
+            st.info(f"🟢 No abnormal symptom rise detected at {loc_info['short_name'] if is_local_focus else 'any reporting center'} (All within normal baseline).")
         else:
             sig_names = []
             sig_scores = []
             for s in sigs:
                 if s["z_score"] > 0:
-                    sig_names.append(s['metric_label'])
+                    prefix = f"{s['short_name']}: " if not is_local_focus else ""
+                    sig_names.append(f"{prefix}{s['metric_label']}")
                     sig_scores.append(s["z_score"])
                     
             fig_pub = px.bar(
                 x=sig_scores,
                 y=sig_names,
                 orientation='h',
-                labels={'x': 'Relative Level of Rise', 'y': 'Symptoms'},
+                labels={'x': 'Relative Level of Rise (Z-Score Deviation)', 'y': 'Symptoms / Metrics'},
                 color=sig_scores,
                 color_continuous_scale=['#38BDF8', '#EF4444']
             )
@@ -1370,11 +1570,10 @@ with tab_public:
             st.plotly_chart(fig_pub, use_container_width=True)
             
     with col_pub2:
-        st.markdown(f"<p style='text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text-color);'>{t['threat_prob']} (%)</p>", unsafe_allow_html=True)
-        # Simple health rules gauge
+        st.markdown(f"<p style='text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text-color);'>{t['threat_prob']} (%) - {loc_info['short_name'] if is_local_focus else 'Regional Grid'}</p>", unsafe_allow_html=True)
         fig_gauge_pub = go.Figure(go.Indicator(
             mode = "gauge+number",
-            value = outbreak_p,
+            value = display_outbreak_p,
             domain = {'x': [0, 1], 'y': [0, 1]},
             gauge = {
                 'axis': {'range': [0, 100], 'tickwidth': 1},
@@ -1405,6 +1604,99 @@ with tab_public:
                 """, unsafe_allow_html=True
             )
 
+    # Historical Baseline vs. Current Privatized Health Radar Table
+    st.markdown("---")
+    st.markdown(f"#### {t.get('baseline_comparison_title', '📊 Historical Baseline vs. Current Privatized Health Radar')}")
+    
+    baseline_rows = []
+    # Filter nodes if local focus is active
+    nodes_to_display = {loc_info["node_id"]: node_data[loc_info["node_id"]]} if is_local_focus else node_data
+    
+    for node_id, node_info in nodes_to_display.items():
+        for m_id, m in node_info["metrics"].items():
+            z = m["z_score"]
+            if z <= 1.5:
+                stat_badge = "🟢 Normal Baseline"
+            elif z <= 3.0:
+                stat_badge = "🟡 Elevated Warning"
+            else:
+                stat_badge = "🚨 Outbreak Surge"
+                
+            baseline_rows.append({
+                t.get("col_node_loc", "Health Center / Sensor Node"): f"{node_info['name']} ({node_info['zone']})",
+                t["col_indicator"]: m["label"],
+                t.get("col_hist_baseline", "Historical Normal Baseline"): f"{m['baseline_mean']} (±{m['baseline_std']})",
+                t.get("col_today_val", "Today's Transmitted Count"): f"{m['transmitted_val']}",
+                t.get("col_surge_ratio", "Surge Factor"): f"{m['surge_ratio']}x",
+                t.get("col_deviation_sigma", "Baseline Deviation (Z)"): f"{'+' if z>=0 else ''}{z} σ",
+                "Status": stat_badge
+            })
+            
+    df_baseline = pd.DataFrame(baseline_rows)
+    st.dataframe(df_baseline, use_container_width=True, hide_index=True)
+
+    # Interactive Geospatial Map (Plotly Mapbox)
+    st.markdown("---")
+    st.markdown(f"#### {t.get('map_title', '🗺️ Regional Health Grid Geospatial Map')}")
+    
+    map_rows = []
+    for node_id, node_info in node_data.items():
+        max_z = max([m["z_score"] for m in node_info["metrics"].values()])
+        top_metric = max(node_info["metrics"].items(), key=lambda item: item[1]["z_score"])
+        
+        if max_z <= 1.5:
+            node_status = "Safe (Normal Baseline)"
+            size_val = 16
+        elif max_z <= 3.0:
+            node_status = "Elevated Warning"
+            size_val = 24
+        else:
+            node_status = "Outbreak Cluster (Red Zone)"
+            size_val = 34
+            
+        map_rows.append({
+            "Center": node_info["name"],
+            "Short_Name": node_info["short_name"],
+            "Zone": node_info["zone"],
+            "lat": node_info["lat"],
+            "lon": node_info["lon"],
+            "Status": node_status,
+            "Primary Indicator": top_metric[1]["label"],
+            "Max Z-Score": f"{max_z} σ",
+            "Size": size_val
+        })
+        
+    df_map = pd.DataFrame(map_rows)
+    
+    center_lat = float(loc_info["lat"]) if is_local_focus else float(df_map["lat"].mean())
+    center_lon = float(loc_info["lon"]) if is_local_focus else float(df_map["lon"].mean())
+    map_zoom = 12.8 if is_local_focus else 10.8
+    
+    fig_map = px.scatter_mapbox(
+        df_map,
+        lat="lat",
+        lon="lon",
+        color="Status",
+        color_discrete_map={
+            "Safe (Normal Baseline)": "#10B981",
+            "Elevated Warning": "#F59E0B",
+            "Outbreak Cluster (Red Zone)": "#EF4444"
+        },
+        size="Size",
+        hover_name="Short_Name",
+        hover_data={"lat": False, "lon": False, "Zone": True, "Status": True, "Primary Indicator": True, "Max Z-Score": True, "Size": False},
+        zoom=map_zoom,
+        center={"lat": center_lat, "lon": center_lon},
+        mapbox_style="open-street-map"
+    )
+    fig_map.update_layout(
+        autosize=True,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        height=350,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
+    )
+    st.plotly_chart(fig_map, use_container_width=True, config={"responsive": True, "displayModeBar": False})
+
 # ==============================================================================
 # TAB 2: CLINIC REPORTER PORTAL (SECONDARY - CLINIC STAFF)
 # ==============================================================================
@@ -1432,10 +1724,25 @@ with tab_clinic:
     else:
         st.markdown(f"### {t['clinic_title']}")
         st.markdown(t['clinic_desc'])
+        
+        # Synchronize default clinic index with selected epicenter
+        loc_node_id = None
+        if "Kalinga" in epicenter: loc_node_id = "node_campus"
+        elif "SOA" in epicenter: loc_node_id = "node_soa"
+        elif "Utkal" in epicenter: loc_node_id = "node_utkal"
+        elif "Capital Hospital" in epicenter: loc_node_id = "node_hospital"
+        elif "Water" in epicenter: loc_node_id = "node_water"
+        elif "Weather" in epicenter: loc_node_id = "node_weather"
+        
+        node_keys = list(NODES.keys())
+        default_idx = node_keys.index(loc_node_id) if loc_node_id in node_keys else 0
+        
         selected_node_id = st.selectbox(
             t['select_node'],
-            options=list(NODES.keys()),
-            format_func=lambda x: NODES[x]["name"]
+            options=node_keys,
+            index=default_idx,
+            format_func=lambda x: NODES[x]["name"],
+            key=f"tab2_node_select_{epicenter}"
         )
         
         node = node_data[selected_node_id]

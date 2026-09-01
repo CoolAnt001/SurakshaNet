@@ -1767,7 +1767,11 @@ with tab_public:
     center_lon = float(loc_info["lon"]) if is_local_focus else float(df_map["lon"].mean())
     map_zoom = 12.8 if is_local_focus else 10.8
     
-    fig_map = px.scatter_mapbox(
+    # Map rendering with compatibility across Plotly versions (px.scatter_map for Plotly >= 5.24 / 6.0+, fallback to px.scatter_mapbox)
+    map_func = getattr(px, "scatter_map", None) or getattr(px, "scatter_mapbox", None)
+    map_style_kwargs = {"map_style": "open-street-map"} if hasattr(px, "scatter_map") else {"mapbox_style": "open-street-map"}
+
+    fig_map = map_func(
         df_map,
         lat="lat",
         lon="lon",
@@ -1782,7 +1786,7 @@ with tab_public:
         hover_data={"lat": False, "lon": False, "Zone": True, "Status": True, "Primary Indicator": True, "Max Z-Score": True, "Size": False},
         zoom=map_zoom,
         center={"lat": center_lat, "lon": center_lon},
-        mapbox_style="open-street-map"
+        **map_style_kwargs
     )
     fig_map.update_layout(
         autosize=True,

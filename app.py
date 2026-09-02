@@ -1264,23 +1264,28 @@ def generate_node_data(scenario, epicenter, epsilon, k_anonymity, is_dynamic_mod
             "metrics": {}
         }
         
-        # Calculate sum of manual logs for this node
+        # Calculate sum of active case reports submitted today
         manual_sums = {}
         for m_id in node_info["metrics"].keys():
             manual_sums[m_id] = 0.0
             
+        today_prefix = datetime.now(IST).strftime("%d %b")
         if raw_sheet_logs:
             for log in raw_sheet_logs:
                 if log.get("node_id") == node_id:
-                    m_id = log.get("symptom")
-                    if m_id in manual_sums:
-                        manual_sums[m_id] += log.get("raw_val", 0.0)
+                    ts = str(log.get("timestamp", ""))
+                    if ts.startswith(today_prefix) or log.get("is_new_session"):
+                        m_id = log.get("symptom")
+                        if m_id in manual_sums:
+                            manual_sums[m_id] += float(log.get("raw_val", 0.0))
         else:
             if "local_logs" in st.session_state and node_id in st.session_state.local_logs:
                 for log in st.session_state.local_logs[node_id]:
-                    m_id = log["symptom"]
-                    if m_id in manual_sums:
-                        manual_sums[m_id] += log["raw_val"]
+                    ts = str(log.get("timestamp", ""))
+                    if ts.startswith(today_prefix) or log.get("is_new_session"):
+                        m_id = log.get("symptom")
+                        if m_id in manual_sums:
+                            manual_sums[m_id] += float(log.get("raw_val", 0.0))
                     
         for metric_id, metric_info in node_info["metrics"].items():
             ref_mean = metric_info["baseline_mean"]
@@ -1291,77 +1296,93 @@ def generate_node_data(scenario, epicenter, epsilon, k_anonymity, is_dynamic_mod
             mean, std, baseline_type = compute_adaptive_baseline(node_id, metric_id, ref_mean, ref_std, raw_sheet_logs, is_dynamic_mode)
             
             # 1. Normal Baseline: Standard routine daily fluctuations around historical mean
-            val = max(0.0, np.random.normal(mean, std))
+            np.random.seed((hash(f"{node_id}_{metric_id}_{scenario}") + 17) % 10000)
+            val = max(0.0, mean + np.random.uniform(-0.3, 0.6) * std)
             
-            # 2. Location-Based Outbreak Surges
-            if scenario == "🌊 Gastrointestinal Outbreak Cluster (Waterborne)":
-                if node_id == "node_water" and (is_water_epicenter or is_all_regions or is_kalinga_epicenter):
-                    if metric_id == "coliform": val = 15.6 if is_water_epicenter else 8.4
-                    elif metric_id == "turbidity": val = 6.4 if is_water_epicenter else 3.8
-                elif node_id == "node_campus" and metric_id == "gastrointestinal":
-                    val = 42.0 if is_kalinga_epicenter else max(val, mean * 1.3)
-                elif node_id == "node_soa" and metric_id == "gastrointestinal":
-                    val = 48.0 if is_soa_epicenter else max(val, mean * 1.2)
-                elif node_id == "node_utkal" and metric_id == "gastrointestinal":
-                    val = 45.0 if is_utkal_epicenter else max(val, mean * 1.25)
-                elif node_id == "node_hospital" and metric_id == "diarrheal":
-                    val = 78.0 if is_hospital_epicenter else (45.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 24.0)
+            # In Normal Baseline, provide a realistic mix: mostly Green with 1 Yellow Watch
+            if scenario == "🟢 Normal Baseline (No Active Outbreaks)":
+                if node_id == "node_soa" and metric_id == "respiratory":
+                    val = mean + 1.9 * std # 🟡 Mild seasonal elevation (~1.9σ Watch)
+                else:
+                    val = max(0.0, mean + np.random.uniform(-0.4, 0.5) * std) # 🟢 Normal Safe
+            
+            # 2. Location-Based Outbreak Surges (Varying Red, Yellow, Green Distribution)
+            elif scenario == "🌊 Gastrointestinal Outbreak Cluster (Waterborne)":
+                # Epicenter: Kalinga Campus North & Water Treatment Station -> 🔴 RED Outbreak
+                if (is_kalinga_epicenter or is_all_regions) and node_id == "node_campus":
+                    if metric_id == "gastrointestinal": val = 14.0 # 🔴 RED (> 10σ Outbreak Surge)
+                    elif metric_id == "fever": val = mean + 1.8 * std # 🟡 YELLOW
+                elif (is_water_epicenter or is_all_regions) and node_id == "node_water":
+                    if metric_id == "coliform": val = 5.6 # 🔴 RED (> 10σ Bacterial Spike)
+                    elif metric_id == "turbidity": val = 3.6 # 🔴 RED (Turbidity Runoff)
+                # Secondary Contact: SOA Campus South & Capital Hospital Triage -> 🟡 YELLOW Warning
+                elif node_id == "node_soa":
+                    if metric_id == "gastrointestinal": val = 6.4 # 🟡 YELLOW (~2.4σ Warning)
+                elif node_id == "node_hospital":
+                    if metric_id == "diarrheal": val = 17.5 # 🟡 YELLOW (~2.5σ Intake Surge)
                 elif node_id == "node_weather":
-                    if metric_id == "temp": val = 33.2
-                    elif metric_id == "rainfall": val = 45.0
+                    if metric_id == "rainfall": val = 24.0 # 🟡 YELLOW (Heavy Precipitation Trigger)
+                    elif metric_id == "temp": val = 32.8
+                # Unaffected Clean Zone: Utkal University (East) -> 🟢 GREEN Safe
+                elif node_id == "node_utkal":
+                    val = max(0.0, mean + np.random.uniform(-0.2, 0.4) * std) # 🟢 GREEN Safe Baseline
                     
             elif scenario == "🫁 Cold-Snap Acute Respiratory Surge":
-                if node_id == "node_campus" and metric_id == "respiratory":
-                    val = 48.0 if is_kalinga_epicenter else max(val, mean * 1.2)
-                elif node_id == "node_soa" and metric_id == "respiratory":
-                    val = 52.0 if is_soa_epicenter else max(val, mean * 1.3)
-                elif node_id == "node_utkal" and metric_id == "respiratory":
-                    val = 50.0 if is_utkal_epicenter else max(val, mean * 1.25)
-                elif node_id == "node_hospital" and metric_id == "ili":
-                    val = 98.0 if is_hospital_epicenter else (55.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 28.0)
+                # Epicenter: Capital Hospital Central OPD & Kalinga Clinic -> 🔴 RED Outbreak
+                if node_id == "node_hospital":
+                    if metric_id == "ili": val = 32.0 # 🔴 RED (~5.5σ Outbreak Surge)
+                    elif metric_id == "fever_high": val = mean + 1.9 * std
+                elif node_id == "node_campus":
+                    if metric_id == "respiratory": val = 11.0 # 🔴 RED (~5.0σ Outbreak Surge)
+                # Secondary Warning: SOA University & Utkal University -> 🟡 YELLOW Warning
+                elif node_id == "node_soa":
+                    if metric_id == "respiratory": val = 9.2 # 🟡 YELLOW (~2.3σ Warning)
+                elif node_id == "node_utkal":
+                    if metric_id == "respiratory": val = 8.5 # 🟡 YELLOW (~2.3σ Warning)
                 elif node_id == "node_weather":
-                    if metric_id == "temp": val = 16.5
+                    if metric_id == "temp": val = 16.5 # 🟡 Cold Snap Meteorological Anomaly
                     elif metric_id == "humidity": val = 93.0
+                # Completely Clean Water Quality: Water Station -> 🟢 GREEN Safe
+                elif node_id == "node_water":
+                    val = max(0.0, mean + np.random.uniform(-0.1, 0.3) * std) # 🟢 GREEN Safe Baseline
                     
             elif scenario == "⚡ Dual Outbreak (Waterborne Gastro + Respiratory Surge)":
-                if node_id == "node_water" and (is_water_epicenter or is_all_regions or is_kalinga_epicenter):
-                    if metric_id == "coliform": val = 15.6 if is_water_epicenter else 8.4
-                    elif metric_id == "turbidity": val = 6.4 if is_water_epicenter else 3.8
-                elif node_id == "node_campus":
-                    if metric_id == "gastrointestinal": val = 42.0 if is_kalinga_epicenter else max(val, mean * 1.3)
-                    elif metric_id == "respiratory": val = 48.0 if is_kalinga_epicenter else max(val, mean * 1.2)
-                elif node_id == "node_soa":
-                    if metric_id == "gastrointestinal": val = 48.0 if is_soa_epicenter else max(val, mean * 1.2)
-                    elif metric_id == "respiratory": val = 52.0 if is_soa_epicenter else max(val, mean * 1.3)
-                elif node_id == "node_utkal":
-                    if metric_id == "gastrointestinal": val = 45.0 if is_utkal_epicenter else max(val, mean * 1.25)
-                    elif metric_id == "respiratory": val = 50.0 if is_utkal_epicenter else max(val, mean * 1.25)
+                # Compound Multi-Pathogen Outbreak: Varied Red, Yellow, Green
+                if node_id == "node_campus":
+                    if metric_id == "gastrointestinal": val = 14.0 # 🔴 RED
+                    elif metric_id == "respiratory": val = 11.0 # 🔴 RED
                 elif node_id == "node_hospital":
-                    if metric_id == "diarrheal": val = 78.0 if is_hospital_epicenter else (45.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 24.0)
-                    elif metric_id == "ili": val = 98.0 if is_hospital_epicenter else (55.0 if (is_kalinga_epicenter or is_soa_epicenter or is_utkal_epicenter) else 28.0)
+                    if metric_id == "diarrheal": val = 26.0 # 🔴 RED
+                    elif metric_id == "ili": val = 32.0 # 🔴 RED
+                elif node_id == "node_water":
+                    if metric_id == "coliform": val = 5.6 # 🔴 RED
+                elif node_id == "node_soa":
+                    if metric_id == "gastrointestinal": val = 6.4 # 🟡 YELLOW
+                    elif metric_id == "respiratory": val = 9.2 # 🟡 YELLOW
                 elif node_id == "node_weather":
-                    if metric_id == "temp": val = 16.5
-                    elif metric_id == "humidity": val = 93.0
-                    elif metric_id == "rainfall": val = 45.0
+                    if metric_id == "rainfall": val = 24.0 # 🟡 YELLOW
+                elif node_id == "node_utkal":
+                    val = max(0.0, mean + np.random.uniform(-0.2, 0.4) * std) # 🟢 GREEN Safe
                     
             elif scenario == "⚠️ False Alarm (Single-Source Data Typo)":
-                # Single isolated clinic enters extreme outlier with zero multi-center corroboration
+                # Only 1 single isolated center enters extreme outlier: 🔴 RED
                 if (node_id == "node_campus" and is_kalinga_epicenter) or (not is_soa_epicenter and not is_utkal_epicenter and not is_hospital_epicenter and node_id == "node_campus"):
-                    if metric_id == "fever": val = 142.0
+                    if metric_id == "fever": val = 142.0 # 🔴 RED Isolated Outlier
                 elif node_id == "node_soa" and is_soa_epicenter:
                     if metric_id == "fever": val = 155.0
                 elif node_id == "node_utkal" and is_utkal_epicenter:
                     if metric_id == "fever": val = 148.0
                 elif node_id == "node_hospital" and is_hospital_epicenter:
                     if metric_id == "fever_high": val = 180.0
+                else:
+                    # All other 5 centers are 🟢 GREEN Safe Baseline
+                    val = max(0.0, mean + np.random.uniform(-0.3, 0.4) * std)
                     
             elif scenario == "🔬 Small Cohort Threat (k-Anonymity Guard Demo)":
-                if node_id == "node_campus" and is_kalinga_epicenter and metric_id == "gastrointestinal":
-                    val = 3.0
-                elif node_id == "node_soa" and is_soa_epicenter and metric_id == "gastrointestinal":
-                    val = 2.0
-                elif node_id == "node_utkal" and is_utkal_epicenter and metric_id == "gastrointestinal":
-                    val = 3.0
+                if node_id in ["node_campus", "node_soa", "node_utkal"] and metric_id == "gastrointestinal":
+                    val = 3.0 # Suppressed locally
+                else:
+                    val = max(0.0, mean + np.random.uniform(-0.3, 0.4) * std)
             
             if metric_id in manual_sums and manual_sums[metric_id] > 0:
                 val += manual_sums[metric_id]

@@ -7,7 +7,11 @@ import math
 import base64
 import requests
 import threading
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+import re
+
+# Indian Standard Time (IST) offset (+05:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # --- Page Setup ---
 st.set_page_config(
@@ -727,69 +731,121 @@ t = I18N[selected_lang]
 # --- Timestamp Formatting Helpers ---
 def format_log_timestamp(ts):
     """
-    Format timestamp string to always show the explicit calendar date and time.
-    Resolves legacy preset entries ('Today' / 'Yesterday' seeded ~7-8 days ago, 24-25 Aug 2026)
-    and formats ISO 8601 strings into readable human-friendly timestamps (e.g., '25 Aug, 10:30 AM').
+    Format timestamp string to always show the explicit calendar date and time in Indian Standard Time (IST).
+    Converts GMT/UTC ISO timestamps (e.g. '2026-09-01T11:20:00.000Z' -> '01 Sep, 16:50 IST'),
+    resolves legacy relative entries ('Today' / 'Yesterday' seeded ~7-8 days ago, 24-25 Aug 2026),
+    and formats timestamps in 24-hour notation explicitly stating 'IST' (e.g., '25 Aug, 17:43 IST').
     """
     if not ts or str(ts).strip() in ["", "Recent"]:
-        return datetime.now().strftime("%d %b, %I:%M %p")
+        return datetime.now(IST).strftime("%d %b, %H:%M IST")
     ts_str = str(ts).strip()
-    # Resolve legacy simulated preset strings from ~7-8 days ago (24-25 Aug 2026)
-    if ts_str.lower().startswith("today"):
-        return ts_str.replace("Today,", "25 Aug,").replace("Today", "25 Aug").replace("today,", "25 Aug,").replace("today", "25 Aug")
-    if ts_str.lower().startswith("yesterday"):
-        return ts_str.replace("Yesterday,", "24 Aug,").replace("Yesterday", "24 Aug").replace("yesterday,", "24 Aug,").replace("yesterday", "24 Aug")
-    # Resolve ISO 8601 strings like '2026-09-01T11:20:00.000Z'
+    
+    # 1. Handle ISO / GMT strings from Google Apps Script or APIs (e.g. '2026-09-01T11:20:00.000Z')
     if "T" in ts_str:
         try:
             clean_ts = ts_str.replace("Z", "+00:00")
             dt = datetime.fromisoformat(clean_ts)
-            return dt.strftime("%d %b, %I:%M %p")
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            dt_ist = dt.astimezone(IST)
+            return dt_ist.strftime("%d %b, %H:%M IST")
         except Exception:
             pass
+
+    # 2. Resolve legacy simulated preset strings from ~7-8 days ago (24-25 Aug 2026)
+    if ts_str.lower().startswith("today"):
+        ts_str = re.sub(r'(?i)^today\s*,\s*', '25 Aug, ', ts_str)
+        ts_str = re.sub(r'(?i)^today\s*', '25 Aug, ', ts_str)
+    elif ts_str.lower().startswith("yesterday"):
+        ts_str = re.sub(r'(?i)^yesterday\s*,\s*', '24 Aug, ', ts_str)
+        ts_str = re.sub(r'(?i)^yesterday\s*', '24 Aug, ', ts_str)
+
+    # 3. Convert 12-hour AM/PM to 24-hour format with IST (e.g. '04:20 PM' -> '16:20 IST')
+    match = re.search(r'(\d{1,2}):(\d{2})\s*(AM|PM)', ts_str, re.IGNORECASE)
+    if match:
+        hour = int(match.group(1))
+        minute = match.group(2)
+        ampm = match.group(3).upper()
+        if ampm == "PM" and hour < 12:
+            hour += 12
+        elif ampm == "AM" and hour == 12:
+            hour = 0
+        time_24 = f"{hour:02d}:{minute} IST"
+        ts_str = ts_str[:match.start()] + time_24 + ts_str[match.end():]
+        ts_str = re.sub(r'(\s*IST)+', ' IST', ts_str).strip()
+        return ts_str
+
+    if not ts_str.endswith("IST"):
+        ts_str = f"{ts_str} IST"
     return ts_str
 
 # --- Default Presentation / Simulation Dataset Helpers ---
 def get_default_presentation_logs():
     return {
         "node_campus": [
-            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 14.0, "timestamp": "25 Aug, 10:30 AM", "details": "Acute watery diarrhea & vomiting cluster post-mess dinner"},
-            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 6.0, "timestamp": "25 Aug, 09:15 AM", "details": "Persistent dry cough, mild bronchospasm triage"},
-            {"symptom": "fever", "location": "Hostel 2", "raw_val": 9.0, "timestamp": "24 Aug, 04:20 PM", "details": "Fever, chills and joint pain screening"}
+            {"symptom": "fever", "location": "Hostel 2", "raw_val": 4.0, "timestamp": "24 Aug, 16:20 IST", "details": "Routine seasonal febrile triage"},
+            {"symptom": "respiratory", "location": "Hostel 1", "raw_val": 5.0, "timestamp": "25 Aug, 09:15 IST", "details": "Persistent dry cough, mild bronchospasm triage"},
+            {"symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 14.0, "timestamp": "26 Aug, 10:30 IST", "details": "Acute watery diarrhea & vomiting cluster post-mess dinner"},
+            {"symptom": "fever", "location": "Hostel 4", "raw_val": 8.0, "timestamp": "27 Aug, 14:10 IST", "details": "Evening fever spike with chills in wing B"},
+            {"symptom": "gastrointestinal", "location": "Central Dining Hall", "raw_val": 9.0, "timestamp": "28 Aug, 18:45 IST", "details": "Mess staff screening: mild abdominal cramps"},
+            {"symptom": "respiratory", "location": "Library Block", "raw_val": 6.0, "timestamp": "30 Aug, 11:20 IST", "details": "Upper respiratory tract infection checkup"},
+            {"symptom": "fever", "location": "Hostel 2", "raw_val": 5.0, "timestamp": "01 Sep, 15:30 IST", "details": "Follow-up screening: mild seasonal headache triage"}
         ],
         "node_soa": [
-            {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 16.0, "timestamp": "25 Aug, 11:45 AM", "details": "Severe abdominal cramps and dehydration triage"},
-            {"symptom": "respiratory", "location": "Hostel A", "raw_val": 5.0, "timestamp": "25 Aug, 08:30 AM", "details": "Acute pharyngitis & cold symptoms"},
-            {"symptom": "fever", "location": "General Campus", "raw_val": 11.0, "timestamp": "24 Aug, 05:10 PM", "details": "Seasonal febrile illness screening"}
+            {"symptom": "respiratory", "location": "Hostel A", "raw_val": 5.0, "timestamp": "24 Aug, 08:30 IST", "details": "Acute pharyngitis & cold symptoms"},
+            {"symptom": "fever", "location": "Main Campus", "raw_val": 4.0, "timestamp": "24 Aug, 17:10 IST", "details": "Mild seasonal febrile illness checkup"},
+            {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 16.0, "timestamp": "26 Aug, 11:45 IST", "details": "Severe abdominal cramps and dehydration triage"},
+            {"symptom": "respiratory", "location": "Hostel C", "raw_val": 7.0, "timestamp": "28 Aug, 09:20 IST", "details": "Dry cough & throat irritation cluster"},
+            {"symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 8.0, "timestamp": "29 Aug, 14:00 IST", "details": "Stomach upset cases under oral rehydration"},
+            {"symptom": "fever", "location": "Sports Complex", "raw_val": 6.0, "timestamp": "31 Aug, 16:40 IST", "details": "Post-activity dehydration & low-grade pyrexia"}
+        ],
+        "node_utkal": [
+            {"symptom": "fever", "location": "Hostel 1", "raw_val": 6.0, "timestamp": "25 Aug, 12:15 IST", "details": "Routine seasonal pyrexia screening"},
+            {"symptom": "gastrointestinal", "location": "Hostel A", "raw_val": 7.0, "timestamp": "27 Aug, 13:00 IST", "details": "Loose stool complaints post hostel meal"},
+            {"symptom": "respiratory", "location": "General Campus", "raw_val": 6.0, "timestamp": "29 Aug, 10:15 IST", "details": "Seasonal allergic rhinitis & dry cough"},
+            {"symptom": "fever", "location": "Hostel 3", "raw_val": 7.0, "timestamp": "31 Aug, 17:30 IST", "details": "Viral fever screening with joint ache"},
+            {"symptom": "gastrointestinal", "location": "Staff Quarters", "raw_val": 4.0, "timestamp": "01 Sep, 11:10 IST", "details": "Mild acute gastritis consultation"}
         ],
         "node_hospital": [
-            {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 28.0, "timestamp": "25 Aug, 11:00 AM", "details": "Urban triage: acute diarrheal intake surge"},
-            {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 34.0, "timestamp": "25 Aug, 09:45 AM", "details": "Influenza-like illness screening outpatient tally"},
-            {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 18.0, "timestamp": "24 Aug, 06:30 PM", "details": "High febrile cases admitted for observation"}
+            {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 18.0, "timestamp": "24 Aug, 18:30 IST", "details": "Acute febrile patients admitted for observation"},
+            {"symptom": "ili", "location": "Outpatient Ward 2", "raw_val": 22.0, "timestamp": "25 Aug, 09:45 IST", "details": "Influenza-like illness screening outpatient tally"},
+            {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 28.0, "timestamp": "26 Aug, 11:00 IST", "details": "Urban triage: acute diarrheal intake surge"},
+            {"symptom": "diarrheal", "location": "Pediatric Wing", "raw_val": 16.0, "timestamp": "27 Aug, 15:30 IST", "details": "Pediatric gastroenteritis admissions tally"},
+            {"symptom": "ili", "location": "Outpatient Ward 3", "raw_val": 34.0, "timestamp": "28 Aug, 10:15 IST", "details": "Seasonal viral influenza outpatient triage peak"},
+            {"symptom": "fever_high", "location": "Emergency Block", "raw_val": 24.0, "timestamp": "30 Aug, 20:10 IST", "details": "High febrile cases admitted for acute observation"},
+            {"symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 19.0, "timestamp": "01 Sep, 10:45 IST", "details": "Stabilizing diarrheal triage intake cohort"}
         ],
         "node_water": [
-            {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 8.4, "timestamp": "25 Aug, 07:00 AM", "details": "Lab Coliform test: elevated bacterial index post-rainfall"},
-            {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 3.8, "timestamp": "25 Aug, 07:30 AM", "details": "Turbidity sensor: elevated suspended solids (NTU)"},
-            {"symptom": "ph", "location": "Distribution Line North", "raw_val": 6.85, "timestamp": "25 Aug, 08:00 AM", "details": "Continuous probe: pH level shifted to 6.85"}
+            {"symptom": "ph", "location": "Distribution Line North", "raw_val": 7.15, "timestamp": "24 Aug, 08:00 IST", "details": "Continuous probe: stable neutral pH recorded"},
+            {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 1.4, "timestamp": "25 Aug, 07:30 IST", "details": "Baseline optical turbidity reading within threshold"},
+            {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 8.4, "timestamp": "26 Aug, 07:00 IST", "details": "Lab Coliform test: elevated bacterial index post-rainfall"},
+            {"symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 3.8, "timestamp": "26 Aug, 08:30 IST", "details": "Turbidity sensor: elevated suspended solids (NTU) post run-off"},
+            {"symptom": "ph", "location": "Distribution Line North", "raw_val": 6.85, "timestamp": "27 Aug, 08:00 IST", "details": "Continuous probe: pH shifted slightly acidic to 6.85"},
+            {"symptom": "coliform", "location": "Campus Storage Tank", "raw_val": 4.2, "timestamp": "28 Aug, 11:00 IST", "details": "Spot test: mild bacterial presence in secondary line"},
+            {"symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 2.2, "timestamp": "01 Sep, 07:30 IST", "details": "Secondary chlorination batch: bacterial count dropping"}
         ],
         "node_weather": [
-            {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 32.8, "timestamp": "25 Aug, 12:00 PM", "details": "Met sensor: elevated regional daytime ambient temp"},
-            {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 86.5, "timestamp": "25 Aug, 12:00 PM", "details": "High relative humidity promoting vector transmission"},
-            {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 24.0, "timestamp": "25 Aug, 06:00 AM", "details": "Convective rainfall tally (24mm) in past 12 hours"}
+            {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 31.4, "timestamp": "24 Aug, 12:00 IST", "details": "Regional afternoon surface temperature"},
+            {"symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 24.0, "timestamp": "25 Aug, 06:00 IST", "details": "Convective heavy rainfall tally (24mm) in past 12 hours"},
+            {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 86.5, "timestamp": "26 Aug, 12:00 IST", "details": "High relative humidity promoting pathogen & vector persistence"},
+            {"symptom": "rainfall", "location": "North Campus Station", "raw_val": 18.5, "timestamp": "27 Aug, 06:30 IST", "details": "Monsoon squall precipitation gauge"},
+            {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 33.2, "timestamp": "28 Aug, 14:00 IST", "details": "High daytime ambient temperature with heat index warning"},
+            {"symptom": "humidity", "location": "Airport Met Tower", "raw_val": 81.0, "timestamp": "30 Aug, 12:00 IST", "details": "Sustained high humidity across urban canopy"},
+            {"symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 30.8, "timestamp": "01 Sep, 12:00 IST", "details": "Mild afternoon breeze and seasonal cooling"}
         ]
     }
 
 def get_default_presentation_notifications():
     return [
         {
-            "timestamp": "2026-08-24 18:30:00",
+            "timestamp": "2026-08-24 18:30:00 IST",
             "status": "🔴 Waterborne Risk Cluster Confirmed",
             "confidence": "95.0%",
             "hash": "SHA256:7f8a9b2c3d4e5f60...",
             "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
         },
         {
-            "timestamp": "2026-08-24 14:15:00",
+            "timestamp": "2026-08-24 14:15:00 IST",
             "status": "🟡 Sentinel Respiratory Surge Advisory",
             "confidence": "68.0%",
             "hash": "SHA256:3a4b5c6d7e8f9012...",
@@ -1018,7 +1074,7 @@ def add_gsheet_log(url, node_id, log):
     # Optimistic local UI update (instant UI addition)
     max_existing_id = max([int(l.get("row_id", 0)) for l in st.session_state.gsheet_logs_cache], default=0)
     temp_row_id = max_existing_id + 1
-    log_time = format_log_timestamp(log.get("timestamp", datetime.now().strftime("%d %b, %I:%M %p")))
+    log_time = format_log_timestamp(log.get("timestamp", datetime.now(IST).strftime("%d %b, %H:%M IST")))
     node_name = NODES.get(node_id, {}).get("name", node_id)
     optimistic_log = {
         "row_id": temp_row_id,
@@ -1070,23 +1126,20 @@ def delete_gsheet_log(url, row_id):
 def seed_gsheet_preset(url):
     if not url:
         return
-    diverse_dataset = [
-        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "gastrointestinal", "location": "Hostel 3", "raw_val": 7.0, "timestamp": "25 Aug, 10:30 AM", "details": "Watery stool & nausea reported after mess dinner"},
-        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "respiratory", "location": "Hostel 1", "raw_val": 4.0, "timestamp": "25 Aug, 09:15 AM", "details": "Mild seasonal rhinovirus / cough symptoms"},
-        {"node_id": "node_campus", "node_name": "Kalinga Institute Clinic", "symptom": "fever", "location": "Hostel 4", "raw_val": 3.0, "timestamp": "24 Aug, 04:20 PM", "details": "Low-grade evening fever & headache screening"},
-        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "gastrointestinal", "location": "Hostel B", "raw_val": 5.0, "timestamp": "25 Aug, 11:45 AM", "details": "Abdominal discomfort & mild cramps triage"},
-        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "respiratory", "location": "Hostel C", "raw_val": 6.0, "timestamp": "25 Aug, 08:30 AM", "details": "Dry cough & throat irritation triage"},
-        {"node_id": "node_soa", "node_name": "SOA University Clinic", "symptom": "fever", "location": "Main Campus", "raw_val": 4.0, "timestamp": "24 Aug, 05:10 PM", "details": "Mild seasonal febrile illness checkup"},
-        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "diarrheal", "location": "Outpatient Ward 1", "raw_val": 14.0, "timestamp": "25 Aug, 11:00 AM", "details": "Urban outpatient diarrheal intake tally"},
-        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "ili", "location": "Outpatient Ward 3", "raw_val": 18.0, "timestamp": "25 Aug, 09:45 AM", "details": "Seasonal viral influenza outpatient triage"},
-        {"node_id": "node_hospital", "node_name": "Capital Hospital Triage", "symptom": "fever_high", "location": "Emergency Block", "raw_val": 8.0, "timestamp": "24 Aug, 06:30 PM", "details": "Acute febrile patients admitted for observation"},
-        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "coliform", "location": "Treatment Plant Inlet", "raw_val": 2.4, "timestamp": "25 Aug, 07:00 AM", "details": "Lab coliform test: minor post-rain elevation"},
-        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "turbidity", "location": "Main Reservoir Tank 1", "raw_val": 1.8, "timestamp": "25 Aug, 07:30 AM", "details": "Optical turbidity reading within standard safety threshold"},
-        {"node_id": "node_water", "node_name": "Bhubaneswar Municipal Water Quality Station", "symptom": "ph", "location": "Distribution Line North", "raw_val": 7.15, "timestamp": "25 Aug, 08:00 AM", "details": "Continuous probe: stable neutral pH recorded"},
-        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "temp", "location": "Bhubaneswar Main Hub", "raw_val": 31.4, "timestamp": "25 Aug, 12:00 PM", "details": "Regional afternoon surface temperature"},
-        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "humidity", "location": "Airport Met Tower", "raw_val": 78.5, "timestamp": "25 Aug, 12:00 PM", "details": "Relative humidity reading across urban zone"},
-        {"node_id": "node_weather", "node_name": "Bhubaneswar Weather Center", "symptom": "rainfall", "location": "Coastal Weather Sensor", "raw_val": 6.2, "timestamp": "25 Aug, 06:00 AM", "details": "Morning localized precipitation gauge"}
-    ]
+    preset_dict = get_default_presentation_logs()
+    diverse_dataset = []
+    for nid, logs in preset_dict.items():
+        node_name = NODES.get(nid, {}).get("name", nid)
+        for log in logs:
+            diverse_dataset.append({
+                "node_id": nid,
+                "node_name": node_name,
+                "symptom": log["symptom"],
+                "location": log["location"],
+                "raw_val": float(log["raw_val"]),
+                "timestamp": log["timestamp"],
+                "details": log["details"]
+            })
     def _seed():
         try:
             rows = requests.get(url, timeout=10).json()
@@ -2037,7 +2090,7 @@ with tab_clinic:
                         • {item_header_text}: {symptom_labels[selected_symptom]}<br>
                         • Original {val_header_text}: <strong>{raw_case_count}</strong><br>
                         • Site: {location_input}<br>
-                        • Date/Time: <strong>{datetime.now().strftime("%d %b, %I:%M %p")}</strong>
+                        • Date/Time: <strong>{datetime.now(IST).strftime("%d %b, %H:%M IST")}</strong>
                     </div>
                     """, unsafe_allow_html=True
                 )
@@ -2049,7 +2102,7 @@ with tab_clinic:
                         <strong style='color:#00F2FE;'>{transmitted_card_title}</strong><br>
                         • Uploaded Value: <strong>{sim_transmitted_tally}</strong> ({suppress_alert})<br>
                         • Uploaded Site: <strong>{sim_transmitted_location}</strong><br>
-                        • Date/Time: <strong>{datetime.now().strftime("%d %b, %I:%M %p")}</strong>
+                        • Date/Time: <strong>{datetime.now(IST).strftime("%d %b, %H:%M IST")}</strong>
                     </div>
                     """, unsafe_allow_html=True
                 )
@@ -2059,7 +2112,7 @@ with tab_clinic:
                     "symptom": selected_symptom,
                     "location": location_input,
                     "raw_val": float(raw_case_count),
-                    "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
+                    "timestamp": datetime.now(IST).strftime("%d %b, %H:%M IST"),
                     "details": clinical_details
                 }
                 if st.session_state.gsheet_url:
@@ -2105,7 +2158,7 @@ with tab_clinic:
                             "symptom": ivr_symptom,
                             "location": ivr_loc,
                             "raw_val": float(ivr_count),
-                            "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
+                            "timestamp": datetime.now(IST).strftime("%d %b, %H:%M IST"),
                             "details": "Logged via Voice Gateway"
                         }
                         if st.session_state.gsheet_url:
@@ -2129,7 +2182,7 @@ with tab_clinic:
                         "symptom": symptom_options[0],
                         "location": "Hostel A",
                         "raw_val": 14.0,
-                        "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
+                        "timestamp": datetime.now(IST).strftime("%d %b, %H:%M IST"),
                         "details": "OCR Hand-written Scanner Scan"
                     }
                     if st.session_state.gsheet_url:
@@ -2147,7 +2200,7 @@ with tab_clinic:
                     "symptom": symptom_options[0],
                     "location": "Main Center",
                     "raw_val": 35.0,
-                    "timestamp": datetime.now().strftime("%d %b, %I:%M %p"),
+                    "timestamp": datetime.now(IST).strftime("%d %b, %H:%M IST"),
                     "details": "Hospital Database Sync Link"
                 }
                 if st.session_state.gsheet_url:
@@ -2196,7 +2249,7 @@ with tab_clinic:
                     if details_str.startswith("[") and "]" in details_str:
                         time_badge = details_str[1:details_str.find("]")]
                     else:
-                        time_badge = datetime.now().strftime("%d %b, %I:%M %p")
+                        time_badge = datetime.now(IST).strftime("%d %b, %H:%M IST")
                 time_badge = format_log_timestamp(time_badge)
                         
                 col_l1, col_l2, col_l3 = st.columns([5, 2, 1.2])
@@ -2404,7 +2457,7 @@ with tab_officer:
         
         if st.button(t["sign_btn"], type="primary", disabled=is_broadcast_disabled):
             st.session_state.notifications.append({
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST"),
                 "status": agg_results["status"],
                 "confidence": f"{agg_results['confidence']}%",
                 "hash": f"SHA256:{base64.b64encode(alert_text.encode()).decode()[:16]}...",

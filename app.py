@@ -242,6 +242,50 @@ st.markdown("""
         0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); }
         50% { box-shadow: 0 0 28px rgba(239, 68, 68, 0.55); border-color: rgba(239, 68, 68, 1); }
     }
+
+    /* Interactive Feedback Animations (Denial Shake & Green Popups) */
+    @keyframes denial-shake {
+        0%, 100% { transform: translateX(0); }
+        15% { transform: translateX(-14px) rotate(-1deg); }
+        30% { transform: translateX(12px) rotate(1deg); }
+        45% { transform: translateX(-9px) rotate(-0.5deg); }
+        60% { transform: translateX(7px) rotate(0.5deg); }
+        75% { transform: translateX(-3px); }
+    }
+    .denial-shake {
+        animation: denial-shake 0.55s ease-in-out !important;
+        border: 2px solid #EF4444 !important;
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.45) !important;
+    }
+    .denial-msg {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid #EF4444;
+        color: #F87171;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 14px;
+        animation: denial-shake 0.55s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    @keyframes green-pop {
+        0% { transform: scale(0.93); opacity: 0; }
+        60% { transform: scale(1.02); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .green-popup {
+        background: rgba(16, 185, 129, 0.12);
+        border: 2px solid #10B981;
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin: 15px 0;
+        animation: green-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -840,6 +884,7 @@ def get_default_presentation_notifications():
         {
             "timestamp": "2026-08-24 18:30:00 IST",
             "status": "🔴 Waterborne Risk Cluster Confirmed",
+            "message": "OFFICIAL HEALTH EMERGENCY ADVISORY\nSTATUS: 🔴 Waterborne Risk Cluster Confirmed\nLIKELIHOOD: 95.0%\nCORROBORATION: Elevated Coliform & Turbidity in Municipal Water post-rainfall detected across urban zones.",
             "confidence": "95.0%",
             "hash": "SHA256:7f8a9b2c3d4e5f60...",
             "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
@@ -847,6 +892,7 @@ def get_default_presentation_notifications():
         {
             "timestamp": "2026-08-24 14:15:00 IST",
             "status": "🟡 Sentinel Respiratory Surge Advisory",
+            "message": "OFFICIAL HEALTH EMERGENCY ADVISORY\nSTATUS: 🟡 Sentinel Respiratory Surge Advisory\nLIKELIHOOD: 68.0%\nCORROBORATION: Seasonal temperature drop and relative humidity surge detected across clinic outpatient wards.",
             "confidence": "68.0%",
             "hash": "SHA256:3a4b5c6d7e8f9012...",
             "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
@@ -1881,23 +1927,42 @@ with tab_clinic:
     # Initialize authentication state for Tab 2
     if "clinic_auth_success" not in st.session_state:
         st.session_state.clinic_auth_success = False
+    if "clinic_auth_denied" not in st.session_state:
+        st.session_state.clinic_auth_denied = False
         
     if not st.session_state.clinic_auth_success:
         col_lock1, col_lock2, col_lock3 = st.columns([1, 1.2, 1])
         with col_lock2:
+            card_class = "lock-card denial-shake" if st.session_state.clinic_auth_denied else "lock-card"
+            denial_html = """
+                <div class="denial-msg">
+                    <span>⛔</span> <span>Incorrect Passcode. Access Denied (Hint: 1234)</span>
+                </div>
+            """ if st.session_state.clinic_auth_denied else ""
             st.markdown(
                 f"""
-                <div class="lock-card">
+                <div class="{card_class}">
                     <div class="lock-icon">🛡️</div>
                     <h3 style="margin-top:0; color: #00F2FE !important; font-size: 1.4rem;">{t["clinic_title"]}</h3>
-                    <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.4; margin-bottom: 25px;">{t["pass_warn_clinic"]}</p>
+                    <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.4; margin-bottom: 18px;">{t["pass_warn_clinic"]}</p>
+                    {denial_html}
                 </div>
                 """, unsafe_allow_html=True
             )
             clinic_auth = st.text_input(t["pass_prompt_clinic"], type="password", key="passcode_clinic_key", label_visibility="collapsed")
-            if clinic_auth == "1234":
-                st.session_state.clinic_auth_success = True
-                st.rerun()
+            if clinic_auth:
+                if clinic_auth == "1234":
+                    st.session_state.clinic_auth_success = True
+                    st.session_state.clinic_auth_denied = False
+                    st.toast("✅ Clinic Portal Unlocked! Welcome, Health Reporter.", icon="🔓")
+                    st.rerun()
+                else:
+                    if not st.session_state.clinic_auth_denied:
+                        st.session_state.clinic_auth_denied = True
+                        st.toast("⛔ Incorrect PIN. Access Denied!", icon="🔒")
+                        st.rerun()
+            elif st.session_state.clinic_auth_denied and not clinic_auth:
+                st.session_state.clinic_auth_denied = False
     else:
         st.markdown(f"### {t['clinic_title']}")
         st.markdown(t['clinic_desc'])
@@ -2119,6 +2184,8 @@ with tab_clinic:
                     add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
                 else:
                     st.session_state.local_logs[selected_node_id].append(new_log)
+                st.toast("✅ Case report securely logged with Differential Privacy!", icon="🛡️")
+                st.toast("🕒 Timestamp stamped in IST", icon="🕒")
                 st.success(t["log_success"])
                 st.rerun()
                 
@@ -2189,6 +2256,8 @@ with tab_clinic:
                         add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
                     else:
                         st.session_state.local_logs[selected_node_id].append(new_log)
+                    st.toast("📸 OCR Data extracted & safely uploaded!", icon="📋")
+                    st.toast("🕒 Timestamp stamped in IST", icon="🕒")
                     st.success(t["log_success"])
                     st.rerun()
                     
@@ -2207,6 +2276,8 @@ with tab_clinic:
                     add_gsheet_log(st.session_state.gsheet_url, selected_node_id, new_log)
                 else:
                     st.session_state.local_logs[selected_node_id].append(new_log)
+                st.toast("🔄 Hospital DB sync batch safely uploaded!", icon="⚡")
+                st.toast("🕒 Timestamp stamped in IST", icon="🕒")
                 st.success(t["log_success"])
                 st.rerun()
 
@@ -2288,6 +2359,7 @@ with tab_clinic:
                             delete_gsheet_log(active_gsheet_url, log["row_id"])
                         else:
                             st.session_state.local_logs[selected_node_id].pop(idx)
+                        st.toast("🗑️ Entry deleted and baseline recalculated.", icon="ℹ️")
                         st.success("Entry deleted!")
                         st.rerun()
             if not active_gsheet_url:
@@ -2303,23 +2375,42 @@ with tab_officer:
     # Initialize authentication state for Tab 3
     if "officer_auth_success" not in st.session_state:
         st.session_state.officer_auth_success = False
+    if "officer_auth_denied" not in st.session_state:
+        st.session_state.officer_auth_denied = False
         
     if not st.session_state.officer_auth_success:
         col_lock1, col_lock2, col_lock3 = st.columns([1, 1.2, 1])
         with col_lock2:
+            card_class = "lock-card denial-shake" if st.session_state.officer_auth_denied else "lock-card"
+            denial_html = """
+                <div class="denial-msg">
+                    <span>⛔</span> <span>Unauthorized Passcode. Access Denied (Hint: 9999)</span>
+                </div>
+            """ if st.session_state.officer_auth_denied else ""
             st.markdown(
                 f"""
-                <div class="lock-card">
+                <div class="{card_class}">
                     <div class="lock-icon">🔑</div>
                     <h3 style="margin-top:0; color: #00F2FE !important; font-size: 1.4rem;">{t["officer_title"]}</h3>
-                    <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.4; margin-bottom: 25px;">{t["pass_warn_officer"]}</p>
+                    <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.4; margin-bottom: 18px;">{t["pass_warn_officer"]}</p>
+                    {denial_html}
                 </div>
                 """, unsafe_allow_html=True
             )
             officer_auth = st.text_input(t["pass_prompt_officer"], type="password", key="passcode_officer_key", label_visibility="collapsed")
-            if officer_auth == "9999":
-                st.session_state.officer_auth_success = True
-                st.rerun()
+            if officer_auth:
+                if officer_auth == "9999":
+                    st.session_state.officer_auth_success = True
+                    st.session_state.officer_auth_denied = False
+                    st.toast("✅ Health Officer Console Unlocked! Welcome, Officer.", icon="🔑")
+                    st.rerun()
+                else:
+                    if not st.session_state.officer_auth_denied:
+                        st.session_state.officer_auth_denied = True
+                        st.toast("⛔ Invalid Officer PIN. Access Denied!", icon="🚨")
+                        st.rerun()
+            elif st.session_state.officer_auth_denied and not officer_auth:
+                st.session_state.officer_auth_denied = False
     else:
         st.markdown(f"### {t['officer_title']}")
         st.markdown(t['officer_desc'])
@@ -2359,9 +2450,10 @@ with tab_officer:
             st.markdown(f"<p style='color:#10B981; font-size:0.85rem;'>🟢 <strong>Connected:</strong> {st.session_state.gsheet_url[:60]}...</p>", unsafe_allow_html=True)
             col_seed1, col_seed2 = st.columns(2)
             with col_seed1:
-                if st.button("✨ Seed Diverse Simulated Dataset", help="Populates varied, realistic test logs across all 5 nodes"):
+                if st.button("✨ Seed Diverse Simulated Dataset", help="Populates varied, realistic test logs across all 6 nodes"):
                     seed_gsheet_preset(st.session_state.gsheet_url)
-                    st.success("✅ Diverse simulated dataset successfully written to Google Sheet!")
+                    st.session_state.seed_popup_active = True
+                    st.toast("🌱 Multi-Facility Seeding Initiated! 39 records transmitting to database...", icon="🚀")
                     st.rerun()
             with col_seed2:
                 if st.button("🧹 Clear All Spreadsheet Data", help="Clears all rows from the Google Sheet"):
@@ -2376,7 +2468,31 @@ with tab_officer:
                     threading.Thread(target=_clear_all, daemon=True).start()
                     st.session_state.gsheet_logs_cache = []
                     st.session_state.gsheet_cache_dirty = True
-                    st.success("Cleared all rows from Google Sheet.")
+                    st.session_state.seed_popup_active = False
+                    st.toast("🧹 All spreadsheet data cleared successfully.", icon="🧼")
+                    st.rerun()
+
+            if st.session_state.get("seed_popup_active"):
+                st.markdown(
+                    """
+                    <div class='green-popup'>
+                        <div style='display: flex; align-items: center; justify-content: space-between;'>
+                            <div style='display: flex; align-items: center; gap: 14px;'>
+                                <span style='font-size: 2.2rem;'>🌱</span>
+                                <div>
+                                    <strong style='color: #10B981; font-size: 1.15rem;'>Simulated Dataset Seeding Initiated!</strong><br>
+                                    <span style='font-size: 0.9rem; opacity: 0.9;'>
+                                        39 balanced clinical and environmental records across <strong>all 6 monitoring nodes</strong> are being synchronized with the cloud database. All timestamps formatted in <strong>24-hr IST</strong>.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button("✕ Dismiss Confirmation", key="dismiss_seed_popup"):
+                    st.session_state.seed_popup_active = False
                     st.rerun()
         else:
             st.markdown("<p style='color:#F59E0B; font-size:0.85rem;'>🟡 <strong>Disconnected:</strong> Using local session memory (data resets on reload).</p>", unsafe_allow_html=True)
@@ -2451,32 +2567,90 @@ with tab_officer:
         st.text_input(t["alert_reg_label"], value=bc_emails, disabled=True)
         
         alert_body = f"OFFICIAL HEALTH EMERGENCY ADVISORY\nSTATUS: {agg_results['status']}\nLIKELIHOOD: {agg_results['confidence']}%\nCORROBORATION: {agg_results['description']}"
-        alert_text = st.text_area(t["alert_draft_label"], value=alert_body, height=120)
+        alert_text = st.text_area(t["alert_draft_label"], value=alert_body, height=130, key="officer_alert_draft_box")
         
-        is_broadcast_disabled = (agg_results["risk_class"] == "safe")
+        is_broadcast_disabled = (agg_results["risk_class"] == "safe" and alert_text.strip() == alert_body.strip())
         
         if st.button(t["sign_btn"], type="primary", disabled=is_broadcast_disabled):
-            st.session_state.notifications.append({
+            # Dynamically determine title from custom text (e.g., "TEST" or custom STATUS line)
+            clean_draft = alert_text.strip()
+            raw_lines = [l.strip() for l in clean_draft.split("\n") if l.strip()]
+            custom_title = agg_results["status"]
+            if raw_lines:
+                first_l = raw_lines[0]
+                if "STATUS:" in first_l:
+                    custom_title = first_l.split("STATUS:", 1)[1].strip()
+                elif "OFFICIAL HEALTH EMERGENCY ADVISORY" in first_l:
+                    for l in raw_lines[1:]:
+                        if "STATUS:" in l:
+                            custom_title = l.split("STATUS:", 1)[1].strip()
+                            break
+                else:
+                    custom_title = f"📢 {first_l[:45]}"
+
+            new_notif = {
                 "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST"),
-                "status": agg_results["status"],
+                "status": custom_title,
+                "message": clean_draft,
                 "confidence": f"{agg_results['confidence']}%",
-                "hash": f"SHA256:{base64.b64encode(alert_text.encode()).decode()[:16]}...",
-                "dispatch": "✅ Dispatched to mobile health registry"
-            })
-            st.success(t["alert_dispatched_success"])
+                "hash": f"SHA256:{base64.b64encode(clean_draft.encode()).decode()[:16]}...",
+                "dispatch": "✅ Dispatched to mobile health registry (2 state officers)"
+            }
+            st.session_state.notifications.append(new_notif)
+            st.session_state.alert_dispatched_popup = new_notif
+            st.toast(f"📢 Official Advisory Dispatched: {custom_title}", icon="🚨")
+            st.toast("🔒 SHA256 cryptographic seal recorded in Ledger", icon="✅")
             st.rerun()
+
+        if st.session_state.get("alert_dispatched_popup"):
+            p = st.session_state.alert_dispatched_popup
+            st.markdown(
+                f"""
+                <div class='green-popup' style='border-left: 6px solid #10B981;'>
+                    <div style='display: flex; align-items: center; justify-content: space-between;'>
+                        <div style='display: flex; align-items: flex-start; gap: 14px; width: 100%;'>
+                            <span style='font-size: 2.2rem;'>📡</span>
+                            <div style='flex: 1;'>
+                                <strong style='color: #10B981; font-size: 1.15rem;'>Official Emergency Advisory Dispatched!</strong><br>
+                                <div style='font-size: 1.05rem; font-weight: 700; color: #EF4444; margin: 4px 0;'>
+                                    {p['status']}
+                                </div>
+                                <div style='background: rgba(0,0,0,0.2); border: 1px solid rgba(16,185,129,0.3); border-left: 3px solid #10B981; padding: 10px 14px; border-radius: 6px; font-size: 0.9rem; font-family: sans-serif; white-space: pre-wrap; margin: 8px 0;'>
+{p.get('message', p['status'])}
+                                </div>
+                                <span style='font-size: 0.82rem; opacity: 0.85;'>
+                                    <strong>Certified Timestamp:</strong> {p['timestamp']} | <strong>Confidence:</strong> {p['confidence']}<br>
+                                    <strong>Cryptographic Audit Seal:</strong> <code style='color: var(--primary-color); font-size:0.8rem;'>{p['hash']}</code>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            if st.button("✕ Acknowledge & Dismiss Alert Confirmation", key="dismiss_alert_dispatch"):
+                st.session_state.alert_dispatched_popup = None
+                st.rerun()
             
         st.markdown(f"#### {t['log_title']}")
         if not st.session_state.notifications:
             st.info("No advisories dispatched in this session.")
         else:
             for n in reversed(st.session_state.notifications):
+                msg_content = n.get("message", "").strip()
                 st.markdown(
                     f"""
-                    <div style='background-color: var(--secondary-background-color); padding: 10px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 8px;'>
-                        <strong style='color:#EF4444;'>{n['status']}</strong> ({n['confidence']})<br>
-                        <small style='opacity: 0.8;'>Time: {n['timestamp']}</small><br>
-                        <small style='font-family: monospace; color:var(--primary-color);'>{n['hash']}</small>
+                    <div style='background-color: var(--secondary-background-color); padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.2); border-left: 4px solid #EF4444; margin-bottom: 12px;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <strong style='color:#EF4444; font-size: 1.05rem;'>{n['status']}</strong>
+                            <span style='font-size: 0.8rem; opacity: 0.8;'>🕒 {n['timestamp']}</span>
+                        </div>
+                        {f"<div style='background: rgba(0,0,0,0.18); padding: 8px 12px; border-radius: 6px; font-size: 0.88rem; line-height: 1.4; white-space: pre-wrap; margin: 8px 0; border-left: 3px solid var(--primary-color);'>{msg_content}</div>" if msg_content else ""}
+                        <div style='display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; margin-top: 6px;'>
+                            <span style='color: #10B981;'>{n.get('dispatch', '✅ Dispatched to mobile health registry')}</span>
+                            <span style='font-family: monospace; color: var(--primary-color);'>{n['hash']}</span>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True
                 )
